@@ -21,7 +21,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3
-        with:
-          changed-files: "true"
-          version-file: "pyproject.toml"
+      - uses: chartboost/ruff-action@v1
