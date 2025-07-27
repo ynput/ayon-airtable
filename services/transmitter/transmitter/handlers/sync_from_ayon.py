@@ -153,11 +153,10 @@ class AyonAirtableHub:
         if record_id is None:
             self.log.info("No existing record found, creating a new one.")
             table.create(data)
-
-        self.log.info("Updating record %s in table %s.", record_id, table.name)
-        # Assuming data contains the fields to update
-        table.update(record_id, data, replace=True)
-
+        else:
+            self.log.info("Updating record %s in table %s.", record_id, table.name)
+            # Assuming data contains the fields to update
+            table.update(record_id, data, replace=True)
     @staticmethod
     def get_record_id(table: pyairtable.Table, data: Dict) -> str:
         """Get the Airtable record ID for the given data.
