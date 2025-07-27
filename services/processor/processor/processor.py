@@ -120,7 +120,9 @@ class AirtableProcessor:
                     sequential=False,
                 )
                 if not event:
-                    self.log.debug("No event found, sleeping for poll interval.")
+                    self.log.debug(
+                        "No event found, sleeping for poll interval."
+                    )
                     time.sleep(self.poll_interval)
                     continue
 
@@ -131,7 +133,9 @@ class AirtableProcessor:
 
                 if payload.get("action") == "airtable-leech":
                     try:
-                        self.log.info("Running the Handler handle_airtable_event")
+                        self.log.info(
+                            "Running the Handler handle_airtable_event"
+                        )
                         ayon_api.update_event(
                             event["id"],
                             description=(
@@ -178,7 +182,8 @@ class AirtableProcessor:
 def service_main() -> None:
     """Main entry point for the Airtable processor service.
 
-    Initializes the AYON service, sets the sender type, and starts processing events.
+    Initializes the AYON service, sets the sender type, and starts
+    processing events.
     """
     ayon_api.init_service()
     ayon_api.set_sender_type("airtable")

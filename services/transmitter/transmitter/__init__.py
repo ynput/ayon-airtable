@@ -1,6 +1,7 @@
 """Transmitter service package.
 
-This package provides the AirtableTransmitter class and service_main function for transmitting data.
+This package provides the AirtableTransmitter class and service_main function
+for transmitting data.
 """
 
 from .transmitter import (

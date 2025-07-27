@@ -120,17 +120,18 @@ class AirtableListener:
             self.webhook_handler = self.create_webhook()
         except Exception:
             self.log.exception(
-                "Fails to connect Airtable Base Instance. Make sure set the correct API key"
-                " in https://airtable.com/create/tokens/. Make sure the scope added "
+                "Fails to connect Airtable Base Instance. "
+                "Make sure set the correct API key"
+                " in https://airtable.com/create/tokens/. "
+                "Make sure the scope added "
                 "with data.records.read and data.records.write"
-
             )
             raise
 
         signal.signal(signal.SIGINT, self._signal_teardown_handler)
         signal.signal(signal.SIGTERM, self._signal_teardown_handler)
 
-    def _signal_teardown_handler(self, signalnum, frame) -> None:
+    def _signal_teardown_handler(self, signalnum, frame) -> None:  # noqa: ANN001
         """Callback to terminating process.
 
         The webhook would be removed
@@ -284,8 +285,8 @@ class AirtableListener:
 def service_main() -> None:
     """Initialize the AYON service and start the Airtable listener.
 
-    This function sets up the AYON service, creates an AirtableListener instance,
-    and starts listening for Airtable events until termination.
+    This function sets up the AYON service, creates an AirtableListener
+    instance, and starts listening for Airtable events until termination.
 
     """
     ayon_api.init_service()

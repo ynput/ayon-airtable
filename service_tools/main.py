@@ -1,7 +1,7 @@
 """Main entry point for AYON Airtable service tools.
 
-This module provides command-line interfaces to run processor, leecher, and transmitter services,
-as well as a utility to run all services concurrently.
+This module provides command-line interfaces to run processor, leecher, and
+transmitter services, as well as a utility to run all services concurrently.
 """
 
 import argparse

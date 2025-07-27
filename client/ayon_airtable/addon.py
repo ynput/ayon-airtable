@@ -1,7 +1,8 @@
 """AYON Airtable Addon module.
 
-This module provides the AirtableAddon class for integrating Airtable functionality
-with AYON, including initialization and plugin path management.
+This module provides the AirtableAddon class for integrating Airtable
+functionality with AYON, including initialization and plugin path
+management.
 """
 
 import os

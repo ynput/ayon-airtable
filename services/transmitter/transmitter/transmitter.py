@@ -1,4 +1,12 @@
 
+"""AYON Airtable Transmitter Service.
+
+This module provides the AirtableTransmitter class, which handles
+synchronization of AYON entity events to Airtable. It manages connections,
+event polling, and transfers relevant data from AYON to Airtable for
+enabled projects.
+"""
+
 import logging
 import sys
 import time
@@ -13,7 +21,8 @@ class AirtableTransmitter:
     """Handles synchronization of AYON entity events to Airtable.
 
     This class manages connections, event polling, and the transfer of relevant
-    data from AYON to Airtable, ensuring that only enabled projects are processed.
+    data from AYON to Airtable, ensuring that only enabled projects are
+    processed.
     """
 
     log = logging.getLogger(__name__)
