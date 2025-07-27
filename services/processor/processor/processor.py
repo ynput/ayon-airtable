@@ -24,7 +24,9 @@ class AirtableProcessor:
         """A class to process AYON events of `airtable.event` topic.
 
         Raises:
-            ValueError: If the Airtable API Key is not found in the Addon System settings.
+            ValueError: If the Airtable API Key is not found in the Addon
+                System settings.
+            TypeError: If the Airtable API Key is not found or is not a dict.
         """
         self.log.info("Initializing the Airtable Processor.")
 
