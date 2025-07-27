@@ -1,8 +1,9 @@
-from typing import Dict, Union
 import logging
-from ayon_api.entity_hub import EntityHub
+from typing import Dict
+
 import ayon_api
 import pyairtable
+from ayon_api.entity_hub import EntityHub
 
 
 class AyonAirtableHub:
@@ -20,7 +21,8 @@ class AyonAirtableHub:
         self.attrib_map = kwargs.get("attribs_map")
         self._cached_hub = self.get_entity_hub(self.project_name)
 
-    def get_entity_hub(self, project_name: str) -> EntityHub:
+    @staticmethod
+    def get_entity_hub(project_name: str) -> EntityHub:
         """Get the EntityHub for the given project.
 
         Args:
@@ -31,8 +33,17 @@ class AyonAirtableHub:
         """
         return EntityHub(project_name)
 
-    def parse_data_to_be_synced(self):
-        """Sync changes from AYON to Airtable."""
+    def parse_data_to_be_synced(self) -> Dict:
+        """Sync changes from AYON to Airtable.
+
+        Returns:
+            Dict: A dictionary mapping Airtable keys to their corresponding
+            values from AYON.
+
+        Raises:
+            ValueError: If the version or product entity does not exist, or if
+            the entity is immutable.
+        """
         self.log.info("Starting sync from AYON to Airtable.")
         data_to_be_synced = {}
         entity_hub = self._cached_hub
@@ -40,15 +51,17 @@ class AyonAirtableHub:
             entity_hub = self.get_entity_hub(self.project_name)
 
         data_to_be_synced["project"] = self.project_name
-        data_to_be_synced["assignne"] = self.user
+        data_to_be_synced["assignee"] = self.user
         data_to_be_synced["version_id"] = self.summary["entityId"]
         version_entity = entity_hub.get_version_by_id(self.summary["entityId"])
         if version_entity is None:
-            raise ValueError("Unable to update a non existing entity.")
+            msg = "Unable to update a non existing entity."
+            raise ValueError(msg)
 
         # make sure the entity is not immutable
         if version_entity.immutable_for_hierarchy:
-            raise ValueError("Entity is immutable, aborting...")
+            msg = "Entity is immutable, aborting..."
+            raise ValueError(msg)
         data_to_be_synced["status"] = version_entity.status
         data_to_be_synced["version"] = version_entity.name
         if version_entity.task_id:
@@ -65,7 +78,8 @@ class AyonAirtableHub:
 
         product_entity = entity_hub.get_product_by_id(self.summary["parentId"])
         if product_entity is None:
-            raise ValueError("Unable to update a non existing entity.")
+            msg = "Unable to update a non existing entity."
+            raise ValueError(msg)
 
         data_to_be_synced["product_name"] = product_entity.name
 
@@ -75,10 +89,15 @@ class AyonAirtableHub:
             if (airtable_key := self.attrib_map.get(ayon_key))
         }
 
-    def sync_from_ayon_to_airtable(self):
+    def sync_from_ayon_to_airtable(self) -> None:
+        """Sync changes from AYON to Airtable based on the topic.
+
+        This method parses the data to be synced and performs the appropriate
+        action in Airtable (create or update) depending on the topic.
+        """
         self.log.info("Starting sync from AYON to Airtable.")
         data = self.parse_data_to_be_synced()
-        self.log.info(f"Syncing data: {data}")
+        self.log.info("Syncing data: %s", data)
         if self.topic == "entity.version.created":
             self.log.info("Creating new version in Airtable.")
             # Here you would implement the logic to create a new version in Airtable
@@ -88,11 +107,11 @@ class AyonAirtableHub:
             # Here you would implement the logic to update the version status in Airtable
             self.update_airtable_record(data)
         else:
-            self.log.warning(f"Unknown action: {self.topic}. Skipping.")
+            self.log.warning("Unknown action: %s. Skipping.", self.topic)
 
         self.log.info("Sync from AYON to Airtable completed.")
 
-    def create_airtable_record(self, data: Dict):
+    def create_airtable_record(self, data: Dict) -> None:
         """Create a record in Airtable.
 
         Args:
@@ -103,10 +122,10 @@ class AyonAirtableHub:
             self.log.error("No table found in Airtable base.")
             return
 
-        self.log.info(f"Creating record in table {table.name}.")
+        self.log.info("Creating record in table %s.", table.name)
         table.create(data)
 
-    def update_airtable_record(self, data: Dict):
+    def update_airtable_record(self, data: Dict) -> None:
         """Update a record in Airtable.
 
         Args:
@@ -121,11 +140,12 @@ class AyonAirtableHub:
             self.log.info("No existing record found, creating a new one.")
             table.create(data)
 
-        self.log.info(f"Updating record {record_id} in table {table.name}.")
+        self.log.info("Updating record %s in table %s.", record_id, table.name)
         # Assuming data contains the fields to update
         table.update(record_id, data, replace=True)
 
-    def get_record_id(self, table:pyairtable.Table, data: Dict) -> str:
+    @staticmethod
+    def get_record_id(table: pyairtable.Table, data: Dict) -> str:
         """Get the Airtable record ID for the given data.
 
         Args:
@@ -147,7 +167,12 @@ class AyonAirtableHub:
         return None
 
     def get_table(self) -> pyairtable.Table:
-        """Get the Airtable table for the current base."""
+        """Get the Airtable table for the current base.
+
+        Returns:
+            pyairtable.Table: The Airtable table object for the current base,
+            or None if not found.
+        """
         api = pyairtable.Api(self.api_key)
         base = api.base(self.base_name)
         return next((table for table in base.tables()), None)

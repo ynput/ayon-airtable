@@ -1,8 +1,8 @@
-from typing import Dict
 import logging
+from typing import Dict
+
 import pyairtable
 from ayon_api.entity_hub import EntityHub
-
 
 log = logging.getLogger(__name__)
 
@@ -11,16 +11,16 @@ AIRTABLE_PATH_ATTRIB = "airtablePath"
 
 
 def serialize_fields(target_fields: Dict) -> Dict:
-    """
-    Serialize the fields from Airtable record to avoid new lines and
+    """Serialize the fields from Airtable record to avoid new lines and
     trailing backslashes in strings.
+
 
     Args:
         target_fields (Dict): The fields from the Airtable record to serialize.
 
     Returns:
         Dict: A serialized attributes map.
-    """
+    """  # noqa: D205
     result = {}
     for key, value in target_fields.items():
         if isinstance(value, str):
@@ -61,7 +61,7 @@ def parse_useful_payloads(payload: Dict) -> Dict:
         changed_tables = payload_data.get("changed_tables_by_id", {})
         for table_id, changed_data in changed_tables.items():
             changed_record_by_tables_ids[table_id] = set()
-            for record_by_id in changed_data.get("changed_records_by_id", {}).keys():
+            for record_by_id in changed_data.get("changed_records_by_id", {}):
                 changed_record_by_tables_ids[table_id].add(record_by_id)
 
     return {
@@ -69,9 +69,11 @@ def parse_useful_payloads(payload: Dict) -> Dict:
         "changed_tables_ids": changed_record_by_tables_ids,
     }
 
-def sync_projects_from_airtable(api: pyairtable.Api, payload: Dict,
-                                required_fields: list, attribs_map: Dict):
-    """ Sync projects from Airtable to AYON.
+
+def sync_projects_from_airtable(
+        api: pyairtable.Api, payload: Dict,
+        required_fields: list, attribs_map: Dict) -> None:
+    """Sync projects from Airtable to AYON.
 
     Args:
         api (pyairtable.Api): access to Airtable API
@@ -89,12 +91,15 @@ def sync_projects_from_airtable(api: pyairtable.Api, payload: Dict,
             for record_id in record_ids:
                 try:
                     record = table.get(record_id)
-                    log.info(f"Processing record: {record}")
+                    log.info("Processing record: %s", record)
                     target_fields = record.get("fields", {})
-                    if not all(field in target_fields for field in required_fields):
+                    if not all(
+                        field in target_fields for field in required_fields
+                    ):
                         log.warning(
-                            f"Record {record_id} does not have "
-                            "'Project', 'Status', or 'VersionId' fields."
+                            "Record %s does not have 'Project', 'Status', "
+                            "or 'VersionId' fields.",
+                            record_id
                         )
                         continue
                     sync_from_airtable_to_ayon(
@@ -103,16 +108,16 @@ def sync_projects_from_airtable(api: pyairtable.Api, payload: Dict,
                         target_fields,
                         attribs_map
                     )
-                except Exception as e:
-                    log.error(
-                        f"Error processing record {record_id}: {e}",
-                        exc_info=True
+                except Exception:
+                    log.exception(
+                        "Error processing record %s",
+                        record_id
                     )
 
 
 def sync_from_airtable_to_ayon(base_id: str, base_url: str,
-                               target_fields: Dict, attribs_map: Dict):
-    """ Sync data from Airtable to AYON.
+                               target_fields: Dict, attribs_map: Dict) -> None:
+    """Sync data from Airtable to AYON.
 
     Args:
         base_id (str): ID of the Airtable base.
@@ -120,8 +125,11 @@ def sync_from_airtable_to_ayon(base_id: str, base_url: str,
         target_fields (Dict): target fields from the Airtable record.
         attribs_map (Dict): attributes mapping from AYON to Airtable.
 
-    """
+    Raises:
+        ValueError: If unable to get EntityHub for the project, if the entity does not exist,
+            or if the entity is immutable.
 
+    """
     target_fields = serialize_fields(target_fields)
     airtable_project = attribs_map["project"]
     project = target_fields[airtable_project]
@@ -130,30 +138,34 @@ def sync_from_airtable_to_ayon(base_id: str, base_url: str,
     try:
         ayon_entity_hub = EntityHub(project)
         project_entity = ayon_entity_hub.project_entity
-    except Exception as e:
-        raise ValueError(f"Unable to get EntityHub for project '{project}': {e}")
+    except ValueError as e:
+        msg = f"Unable to get EntityHub for project '{project}': {e}"
+        raise ValueError(msg) from e
 
     ayon_entity = ayon_entity_hub.get_or_query_entity_by_id(version_id, ["version"])
     # can we use much simpler function?
     # ayon_entity = ayon_entity_hub.get_version_by_id(version_id)
     if ayon_entity is None:
-        raise ValueError("Unable to update a non existing entity.")
+        msg = "Unable to update a non existing entity."
+        raise ValueError(msg)
 
     # make sure the entity is not immutable
     if ayon_entity.immutable_for_hierarchy:
-        raise ValueError("Entity is immutable, aborting...")
+        msg = "Entity is immutable, aborting..."
+        raise ValueError(msg)
 
     airtable_status = attribs_map["status"]
-    all_status_attribs_matched = set(
+    all_status_attribs_matched = {
         status.name for status in project_entity.statuses
-    )
+    }
     new_status = target_fields[airtable_status]
     if new_status in all_status_attribs_matched:
         ayon_entity.status = new_status
     else:
         log.warning(
-            f"Status '{new_status}' not available"
-            f" for {ayon_entity.entity_type}."
+            "Status '%s' not available for %s.",
+            new_status,
+            ayon_entity.entity_type
         )
 
     ayon_entity_airtable_id = str(

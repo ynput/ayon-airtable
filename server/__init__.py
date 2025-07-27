@@ -1,16 +1,13 @@
 """Server package."""
-from typing import Type, Dict
+from typing import Dict, Type
+
 import httpx
 from ayon_server.addons import BaseServerAddon
 from ayon_server.exceptions import InvalidSettingsException
-from ayon_server.secrets import Secrets
 from ayon_server.lib.postgres import Postgres
+from ayon_server.secrets import Secrets
 
-from .settings import (
-    AirtableSettings,
-    AIRTABLE_DEFAULT_VALUES
-)
-
+from .settings import AIRTABLE_DEFAULT_VALUES, AirtableSettings
 
 AIRTABLE_ID_ATTRIB = "airtableId"
 AIRTABLE_PATH_ATTRIB = "airtablePath"
@@ -75,20 +72,26 @@ class AirtableAddon(BaseServerAddon):
 
     @staticmethod
     async def create_airtable_attributes() -> bool:
-        """Ensure required Airtable attributes exist, with reduced complexity."""
+        """Ensure required Airtable attributes exist, with reduced complexity.
 
+        Returns:
+            bool: True if attributes were created or updated, False otherwise.
+        """
         query = "SELECT name, position, scope, data from public.attributes"
         attribute_defs = {
             AIRTABLE_ID_ATTRIB: {
-                "data": {"type": "string", "title": "airtable id", "inherit": False},
+                "data": {"type": "string", "title": "airtable id",
+                         "inherit": False},
                 "scope": ["project", "folder", "task", "version"],
             },
             AIRTABLE_PATH_ATTRIB: {
-                "data": {"type": "string", "title": "airtable path", "inherit": False},
+                "data": {"type": "string", "title": "airtable path",
+                         "inherit": False},
                 "scope": ["project", "folder", "task", "version"],
             },
             AIRTABLE_PUSH_ATTRIB: {
-                "data": {"type": "boolean", "title": "airtable push", "inherit": False, "default": True},
+                "data": {"type": "boolean", "title": "airtable push",
+                         "inherit": False, "default": True},
                 "scope": ["project"],
             },
         }
@@ -128,7 +131,11 @@ class AirtableAddon(BaseServerAddon):
 
         for name, attr_def in attribute_defs.items():
             if not found[name]["matches"]:
-                pos = found[name]["position"] if found[name]["position"] is not None else position
+                pos = (
+                    found[name]["position"]
+                    if found[name]["position"] is not None
+                    else position
+                )
                 if found[name]["position"] is None:
                     position += 1
                 await Postgres.execute(

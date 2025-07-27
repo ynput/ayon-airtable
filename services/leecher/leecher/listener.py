@@ -78,7 +78,8 @@ class AirtableListener:
             service_settings = self.settings["service_settings"]
             self.airtable_base_name = service_settings["base_name"]
             self.poll_interval = service_settings["poll_interval"]
-            airtable_secret = ayon_api.get_secret(service_settings["script_key"])
+            airtable_secret = ayon_api.get_secret(
+                service_settings["script_key"])
             if not isinstance(airtable_secret, dict):
                 msg = (
                     "Airtable API Key not found. Make sure to set it in the "
