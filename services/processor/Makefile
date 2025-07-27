@@ -27,7 +27,7 @@ dev:
 		--env AYON_SERVER_URL=${AYON_SERVER_URL} \
 		--env AYON_ADDON_NAME=ftrack \
 		--env AYON_ADDON_VERSION=$(VERSION) \
-		$(IMAGE) python -m leecher
+		$(IMAGE) python -m processor
 
 bash:
 	docker run --name $(BASH_CONTAINER_NAME) --rm -it --entrypoint /bin/bash $(IMAGE)
