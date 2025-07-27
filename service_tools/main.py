@@ -1,8 +1,14 @@
-import os
-import sys
-import logging
+"""Main entry point for AYON Airtable service tools.
+
+This module provides command-line interfaces to run processor, leecher, and transmitter services,
+as well as a utility to run all services concurrently.
+"""
+
 import argparse
+import logging
+import os
 import subprocess
+import sys
 import time
 
 from ayon_api.constants import (
@@ -13,6 +19,7 @@ ADDON_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def run_all():
+    """Run all three services (leecher, processor, transmitter) concurrently."""
     all_idx = sys.argv.index("all")
     leecher_args = list(sys.argv)
     processor_args = list(sys.argv)
@@ -65,7 +72,14 @@ def run_all():
             transmitter.kill()
 
 
-def main():
+def main() -> None:
+    """Parse arguments and run the specified AYON Airtable service.
+
+    Parses command-line arguments to determine which service to run
+    (processor, leecher, transmitter, or all), sets the appropriate
+    environment variable for the settings variant, and executes the
+    selected service.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--service",
@@ -104,6 +118,8 @@ def main():
         from transmitter import service_main
 
         service_main()
+
+    return None
 
 
 if __name__ == "__main__":

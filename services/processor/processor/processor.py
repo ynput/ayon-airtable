@@ -1,21 +1,30 @@
 
-import sys
 import logging
-import traceback
-from typing import Dict
-from pprint import pformat
+import sys
 import time
+import traceback
+from pprint import pformat
+from typing import Dict, Optional
+
 import ayon_api
 import pyairtable
+
 from .handlers.sync_from_airtable_handlers import sync_projects_from_airtable
 
 
 class AirtableProcessor:
+    """Processes AYON events related to Airtable integration.
+
+    Handles event enrollment, synchronization of projects from Airtable,
+    and manages API authentication and polling intervals.
+    """
     log = logging.getLogger(__name__)
 
     def __init__(self):
         """A class to process AYON events of `airtable.event` topic.
 
+        Raises:
+            ValueError: If the Airtable API Key is not found in the Addon System settings.
         """
         self.log.info("Initializing the Airtable Processor.")
 
@@ -26,28 +35,29 @@ class AirtableProcessor:
             self.poll_interval = service_settings["poll_interval"]
             airtable_secret = ayon_api.get_secret(
                 service_settings["script_key"])
-
-            if isinstance(airtable_secret, list):
-                raise ValueError(
+            if not isinstance(airtable_secret, dict):
+                msg = (
                     "Airtable API Key not found. Make sure to set it in the "
                     "Addon System settings. "
                     "`ayon+settings://airtable/service_settings/script_key`"
                 )
+                raise TypeError(msg)  # noqa: TRY301
 
             self.airtable_api_key = airtable_secret.get("value")
             if not self.airtable_api_key:
-                raise ValueError(
+                msg = (
                     "Airtable API Key not found. Make sure to set it in the "
                     "Addon System settings."
                 )
+                raise ValueError(msg)  # noqa: TRY301
 
-        except Exception as e:
-            self.log.error("Unable to get Addon settings from the server.")
-            self.log.error(traceback.format_exc())
-            raise e
+        except Exception:
+            self.log.exception("Unable to get Addon settings from the server.")
+            self.log.exception(traceback.format_exc())
+            raise
 
     def handle_airtable_event(self, payload: Dict):
-        """Handle the `airtable.event` event type. """
+        """Handle the `airtable.event` event type."""
         self.log.info("Handling Airtable event.")
         if not payload:
             self.log.warning("No payload found in the event.")
@@ -69,15 +79,22 @@ class AirtableProcessor:
             self.attribs_map
         )
 
-    def _get_api_token(self, airtable_api_key=None):
-        """Get the Airtable API token."""
+    def _get_api_token(self, airtable_api_key: Optional[str] = None) -> pyairtable.Api:
+        """Get the Airtable API token.
+
+        Args:
+            airtable_api_key (Optional[str]): The Airtable API key to use. If None, uses the instance's API key.
+
+        Returns:
+            pyairtable.Api: An instance of the Airtable API client.
+        """
         if airtable_api_key is None:
             airtable_api_key = self.airtable_api_key
         return pyairtable.Api(airtable_api_key)
 
-    def start_processing(self):
-        """
-        Enroll AYON events of topic `airtable.leech` and
+    def start_processing(self) -> None:
+        """Enroll AYON events of topic `airtable.leech` and.
+
         process them using handle_airtable_event.
         """
         while True:
@@ -117,9 +134,8 @@ class AirtableProcessor:
 
                     except Exception:
                         failed = True
-                        self.log.error(
-                            "Unable to process handler handle_airtable_event",
-                            exc_info=True
+                        self.log.exception(
+                            "Unable to process handler handle_airtable_event"
                         )
                         ayon_api.update_event(
                             event["id"],
@@ -143,10 +159,14 @@ class AirtableProcessor:
                     )
 
             except Exception:
-                self.log.error(traceback.format_exc())
+                self.log.exception(traceback.format_exc())
 
 
-def service_main():
+def service_main() -> None:
+    """Main entry point for the Airtable processor service.
+
+    Initializes the AYON service, sets the sender type, and starts processing events.
+    """
     ayon_api.init_service()
     ayon_api.set_sender_type("airtable")
     airtable_processor = AirtableProcessor()

@@ -5,6 +5,7 @@ from ayon_server.settings.enum import secrets_enum
 
 
 class AirtableAttributeSettings(BaseSettingsModel):
+    """Settings for Airtable attributes mapping."""
     project: str = SettingsField(
         default="Project", title="Project Name",
         description="Name of the project to sync with Airtable."
@@ -53,6 +54,7 @@ class AirtableServiceSettings(BaseSettingsModel):
     poll_interval: int = SettingsField(title="Poll Interval")
 
 class AirtableSettings(BaseSettingsModel):
+    """Settings for the Airtable integration."""
     attribute_maps: AirtableAttributeSettings = SettingsField(
         default_factory=AirtableAttributeSettings,
         title="Airtable <-> AYON Attributes Mapping",
