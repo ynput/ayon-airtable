@@ -18,8 +18,8 @@ from ayon_api.constants import (
 ADDON_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def run_all():
-    """Run all three services (leecher, processor, transmitter) concurrently."""
+def run_all() -> None:
+    """Run all three services (leecher, processor, transmitter)."""
     all_idx = sys.argv.index("all")
     leecher_args = list(sys.argv)
     processor_args = list(sys.argv)

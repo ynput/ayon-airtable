@@ -1,10 +1,16 @@
+"""AYON Airtable Addon module.
+
+This module provides the AirtableAddon class for integrating Airtable functionality
+with AYON, including initialization and plugin path management.
+"""
+
 import os
+from typing import Any, Dict
 
 from ayon_core.addon import (
     AYONAddon,
     IPluginPaths,
 )
-from typing import Dict, Any
 from ayon_core.lib import Logger
 
 from .version import __version__
@@ -15,6 +21,12 @@ AIRTABLE_ADDON_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class AirtableAddon(AYONAddon, IPluginPaths):
+    """AYON Airtable Addon class.
+
+    Integrates Airtable functionality with AYON, handles initialization,
+    environment variable setup, and plugin path management.
+    """
+
     name = "airtable"
     version = __version__
 

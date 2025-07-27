@@ -50,7 +50,8 @@ class AirtableAddon(BaseServerAddon):
             Dict: The Airtable token information.
 
         Raises:
-            InvalidSettingsException: If required settings or secrets are not set.
+            InvalidSettingsException: If required settings or secrets
+            are not set.
         """
         if settings_model is None:
             settings_model = await self.get_studio_settings(variant)
@@ -162,7 +163,7 @@ class AirtableAddon(BaseServerAddon):
 
         async with httpx.AsyncClient() as client:
             http_response = await client.get(url, headers=headers)
-        if http_response.status_code != 200:
+        if http_response.status_code != 200:  # noqa: PLR2004
             return {
                 "valid": False,
                 "scopes": [],

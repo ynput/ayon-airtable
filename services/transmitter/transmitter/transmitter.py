@@ -127,15 +127,16 @@ class AirtableTransmitter:
                 hub = AyonAirtableHub(**kwargs)
                 hub.sync_from_ayon_to_airtable()
 
-                self.log.info("Event has been processed... setting to finished!")
+                self.log.info(
+                    "Event has been processed... setting to finished!"
+                )
                 ayon_api.update_event(
                     event["id"],
                     project_name=project_name,
                     status="finished"
                 )
             except Exception:
-                self.log.exception(
-                    "Error processing event", exc_info=True)
+                self.log.exception("Error processing event")
 
                 ayon_api.update_event(
                     event["id"],
@@ -160,12 +161,13 @@ class AirtableTransmitter:
             if project["attrib"].get("airtablePush")
         ]
 
-def service_main() -> None:
-    """Initialize the AYON service and start the Airtable transmitter processing loop.
 
-    This function sets up the AYON API service, creates an instance of AirtableTransmitter,
-    and starts processing events until the process exits.
-    """
+def service_main() -> None:
+    """Initialize AYON service and start the Airtable transmitter processing loop.
+
+    This function sets up the AYON API service, creates an instance of
+    AirtableTransmitter, and starts processing events until the process exits.
+    """  # noqa: E501
     ayon_api.init_service()
     airtable_transmitter = AirtableTransmitter()
     sys.exit(airtable_transmitter.start_processing())

@@ -1,6 +1,7 @@
 """Settings package for Airtable integration.
 
-This package provides configuration classes and default values for Airtable settings.
+This package provides configuration classes and default values for
+Airtable settings.
 """
 
 from .main import (

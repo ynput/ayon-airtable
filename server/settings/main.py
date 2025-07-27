@@ -53,6 +53,7 @@ class AirtableServiceSettings(BaseSettingsModel):
     ))
     poll_interval: int = SettingsField(title="Poll Interval")
 
+
 class AirtableSettings(BaseSettingsModel):
     """Settings for the Airtable integration."""
     attribute_maps: AirtableAttributeSettings = SettingsField(

@@ -1,3 +1,9 @@
+"""Handlers for syncing data from AYON to Airtable.
+
+This module provides the AyonAirtableHub class for synchronizing
+AYON entities with Airtable records.
+"""
+
 import logging
 from typing import Dict
 
@@ -7,6 +13,12 @@ from ayon_api.entity_hub import EntityHub
 
 
 class AyonAirtableHub:
+    """A hub for synchronizing AYON entities with Airtable records.
+
+    This class provides methods to parse AYON data, and create or update
+    corresponding records in Airtable.
+    """
+
     def __init__(self, **kwargs: object):
         """Initialize the Ayon Airtable Hub."""
         self.log = logging.getLogger(__name__)
@@ -100,11 +112,13 @@ class AyonAirtableHub:
         self.log.info("Syncing data: %s", data)
         if self.topic == "entity.version.created":
             self.log.info("Creating new version in Airtable.")
-            # Here you would implement the logic to create a new version in Airtable
+            # Here you would implement the logic to create a new version
+            # in Airtable
             self.create_airtable_record(data)
         elif self.topic == "entity.version.status_changed":
             self.log.info("Updating version status in Airtable.")
-            # Here you would implement the logic to update the version status in Airtable
+            # Here you would implement the logic to update the version status
+            # in Airtable
             self.update_airtable_record(data)
         else:
             self.log.warning("Unknown action: %s. Skipping.", self.topic)

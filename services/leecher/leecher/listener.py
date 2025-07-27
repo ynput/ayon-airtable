@@ -1,4 +1,11 @@
 
+"""Listener module for Airtable webhooks and AYON integration.
+
+This module provides the AirtableListener class to handle webhook
+management,payload retrieval, and event dispatching between
+Airtable and AYON.
+"""
+
 import json
 import logging
 import os
@@ -22,8 +29,8 @@ def to_dict(obj: object) -> Union[Dict[str, object], List[object], object]:
         obj (object): The object to convert.
 
     Returns:
-        Union[Dict[str, object], List[object], object]: The converted dictionary,
-        list, or original object.
+        Union[Dict[str, object], List[object], object]: The converted
+        dictionary, list, or original object.
     """
     if isinstance(obj, dict):
         return {k: to_dict(v) for k, v in obj.items()}
@@ -179,7 +186,9 @@ class AirtableListener:
                     return base["id"], api.base(base["id"])
         return None, None
 
-    def add_webhook(self, webserver_url: Optional[str] = None) -> CreateWebhookResponse:
+    def add_webhook(
+            self, webserver_url: Optional[str] = None
+            ) -> CreateWebhookResponse:
         """Adding Airtable webbook.
 
         Args:

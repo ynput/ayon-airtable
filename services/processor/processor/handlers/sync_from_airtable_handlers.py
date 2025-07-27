@@ -1,3 +1,10 @@
+"""Handlers for syncing data from Airtable to AYON.
+
+This module provides functions to parse Airtable payloads, serialize fields,
+and synchronize project and version data from Airtable records to
+AYON entities.
+"""
+
 import logging
 from typing import Dict
 
@@ -78,7 +85,8 @@ def sync_projects_from_airtable(
     Args:
         api (pyairtable.Api): access to Airtable API
         payload (Dict): The payload data from the event.
-        required_fields (list): required fields to check in the Airtable record.
+        required_fields (list): required fields to check in the
+        Airtable record.
         attribs_map (Dict): attributes mapping from AYON to Airtable.
     """
     parsed_payload = parse_useful_payloads(payload)
@@ -86,7 +94,7 @@ def sync_projects_from_airtable(
     base = api.base(base_id)
     base_meta_url = base.urls.meta
     if parsed_payload.get("changed_tables_ids", {}):
-        for table_id, record_ids in parsed_payload["changed_tables_ids"].items():
+        for table_id, record_ids in parsed_payload["changed_tables_ids"].items():  # noqa: E501
             table = base.table(table_id)
             for record_id in record_ids:
                 try:
@@ -126,7 +134,8 @@ def sync_from_airtable_to_ayon(base_id: str, base_url: str,
         attribs_map (Dict): attributes mapping from AYON to Airtable.
 
     Raises:
-        ValueError: If unable to get EntityHub for the project, if the entity does not exist,
+        ValueError: If unable to get EntityHub for the project, if the entity
+        does not exist,
             or if the entity is immutable.
 
     """
@@ -142,7 +151,8 @@ def sync_from_airtable_to_ayon(base_id: str, base_url: str,
         msg = f"Unable to get EntityHub for project '{project}': {e}"
         raise ValueError(msg) from e
 
-    ayon_entity = ayon_entity_hub.get_or_query_entity_by_id(version_id, ["version"])
+    ayon_entity = ayon_entity_hub.get_or_query_entity_by_id(
+        version_id, ["version"])
     # can we use much simpler function?
     # ayon_entity = ayon_entity_hub.get_version_by_id(version_id)
     if ayon_entity is None:
@@ -186,4 +196,3 @@ def sync_from_airtable_to_ayon(base_id: str, base_url: str,
         )
 
     ayon_entity_hub.commit_changes()
-

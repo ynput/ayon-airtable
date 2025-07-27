@@ -1,4 +1,11 @@
 
+"""Airtable Processor Service for AYON.
+
+This module provides the AirtableProcessor class, which handles AYON events
+related to Airtable integration, including event enrollment, synchronization
+of projects from Airtable, API authentication, and polling intervals.
+"""
+
 import logging
 import sys
 import time
@@ -58,7 +65,7 @@ class AirtableProcessor:
             self.log.exception(traceback.format_exc())
             raise
 
-    def handle_airtable_event(self, payload: Dict):
+    def handle_airtable_event(self, payload: Dict) -> None:
         """Handle the `airtable.event` event type."""
         self.log.info("Handling Airtable event.")
         if not payload:
@@ -81,11 +88,13 @@ class AirtableProcessor:
             self.attribs_map
         )
 
-    def _get_api_token(self, airtable_api_key: Optional[str] = None) -> pyairtable.Api:
+    def _get_api_token(
+            self, airtable_api_key: Optional[str] = None) -> pyairtable.Api:
         """Get the Airtable API token.
 
         Args:
-            airtable_api_key (Optional[str]): The Airtable API key to use. If None, uses the instance's API key.
+            airtable_api_key (Optional[str]): The Airtable API key to use.
+            If None, uses the instance's API key.
 
         Returns:
             pyairtable.Api: An instance of the Airtable API client.
@@ -131,7 +140,7 @@ class AirtableProcessor:
                             ),
                             status="in_progress",
                         )
-                        self.log.debug(f"processing event {pformat(payload)}")
+                        self.log.debug(f"processing event {pformat(payload)}")  # noqa: G004
                         self.handle_airtable_event(payload)
 
                     except Exception:
@@ -156,7 +165,9 @@ class AirtableProcessor:
                         "Event has been processed... setting to finished!")
                     ayon_api.update_event(
                         event["id"],
-                        description=f"Event processed successfully {table_event_id}",
+                        description=(
+                            f"Event processed successfully {table_event_id}"
+                        ),
                         status="finished",
                     )
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python       # NOQA: E402
 
 """Prepares server package from addon repo to upload to server.
 
