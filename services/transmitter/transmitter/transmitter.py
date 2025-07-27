@@ -77,7 +77,7 @@ class AirtableTransmitter:
     def start_processing(self) -> None:
         """Main loop querying AYON for `entity.*` events.
 
-        We enroll to events that `created`, `deleted` and `renamed`
+        We enroll to events that `created` and `status_changed`
         on AYON `entity` to replicate the event in Airtable.
         """
         events_we_care = [
