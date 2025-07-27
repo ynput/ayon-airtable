@@ -78,7 +78,7 @@ class AirtableTransmitter:
         """Main loop querying AYON for `entity.*` events.
 
         We enroll to events that `created`, `deleted` and `renamed`
-        on AYON `entity` to replicate the event in Shotgrid.
+        on AYON `entity` to replicate the event in Airtable.
         """
         events_we_care = [
             "entity.version.created",
