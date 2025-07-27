@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python  # noqa: EXE001, RUF100
 
 """Prepares server package from addon repo to upload to server.
 
