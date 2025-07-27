@@ -83,7 +83,7 @@ def sync_projects_from_airtable(api: pyairtable.Api, payload: Dict,
     base_id = parsed_payload["base_id"]
     base = api.base(base_id)
     base_meta_url = base.urls.meta
-    if parsed_payload.get("changed_records_by_id", {}):
+    if parsed_payload.get("changed_tables_ids", {}):
         for table_id, record_ids in parsed_payload["changed_tables_ids"].items():
             table = base.table(table_id)
             for record_id in record_ids:
@@ -125,7 +125,8 @@ def sync_from_airtable_to_ayon(base_id: str, base_url: str,
     target_fields = serialize_fields(target_fields)
     airtable_project = attribs_map["project"]
     project = target_fields[airtable_project]
-    version_id = attribs_map["version_id"]
+    airtable_version_id = attribs_map["version_id"]
+    version_id = target_fields[airtable_version_id]
     try:
         ayon_entity_hub = EntityHub(project)
         project_entity = ayon_entity_hub.project_entity

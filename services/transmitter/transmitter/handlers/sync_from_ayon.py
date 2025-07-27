@@ -70,27 +70,25 @@ class AyonAirtableHub:
         data_to_be_synced["product_name"] = product_entity.name
 
         return {
-            self.attrib_map[airtable_key]: value
+            airtable_key: value
             for ayon_key, value in data_to_be_synced.items()
             if (airtable_key := self.attrib_map.get(ayon_key))
         }
 
     def sync_from_ayon_to_airtable(self):
         self.log.info("Starting sync from AYON to Airtable.")
-        data_to_be_synced = self.parse_data_to_be_synced()
-        for data in data_to_be_synced:
-            self.log.info(f"Syncing data: {data}")
-            if self.topic == "entity.version.created":
-                self.log.info("Creating new version in Airtable.")
-                # Here you would implement the logic to create a new version in Airtable
-                self.create_airtable_record(data)
-            elif self.topic == "entity.version.status_changed":
-                self.log.info("Updating version status in Airtable.")
-                # Here you would implement the logic to update the version status in Airtable
-                self.update_airtable_record(data)
-            else:
-                self.log.warning(f"Unknown action: {data['action']}. Skipping.")
-                continue
+        data = self.parse_data_to_be_synced()
+        self.log.info(f"Syncing data: {data}")
+        if self.topic == "entity.version.created":
+            self.log.info("Creating new version in Airtable.")
+            # Here you would implement the logic to create a new version in Airtable
+            self.create_airtable_record(data)
+        elif self.topic == "entity.version.status_changed":
+            self.log.info("Updating version status in Airtable.")
+            # Here you would implement the logic to update the version status in Airtable
+            self.update_airtable_record(data)
+        else:
+            self.log.warning(f"Unknown action: {self.topic}. Skipping.")
 
         self.log.info("Sync from AYON to Airtable completed.")
 
@@ -100,9 +98,7 @@ class AyonAirtableHub:
         Args:
             data (Dict): The data to create the record with.
         """
-        api = pyairtable.Api(self.api_key)
-        base = api.base(self.base_name)
-        table = next((table for table in base.tables()), None)
+        table = self.get_table()
         if table is None:
             self.log.error("No table found in Airtable base.")
             return
@@ -116,7 +112,11 @@ class AyonAirtableHub:
         Args:
             data (Dict): The data to update the record with.
         """
-        table, record_id = self.get_table_and_record_id(data)
+        table = self.get_table()
+        if table is None:
+            self.log.error("No table found in Airtable base.")
+            return
+        record_id = self.get_record_id(table, data)
         if record_id is None:
             self.log.info("No existing record found, creating a new one.")
             table.create(data)
@@ -125,23 +125,29 @@ class AyonAirtableHub:
         # Assuming data contains the fields to update
         table.update(record_id, data, replace=True)
 
-    def get_table_and_record_id(self, data: Dict) -> Union[pyairtable.Table, str]:
-        """Get Airtable table and record ID based on data.
+    def get_record_id(self, table:pyairtable.Table, data: Dict) -> str:
+        """Get the Airtable record ID for the given data.
+
+        Args:
+            table (pyairtable.Table): The Airtable table to search in.
+            data (Dict): The data to match against existing records.
 
         Returns:
-            pyairtable.Table, record_id: Table, str
+            record_id: str
         """
+        for record in table.all():
+            if not record.get("fields", {}):
+                continue
+            if (
+                record["fields"].get("Project") == data["Project"]
+                and record["fields"].get("V#") == data["V#"]
+                and record["fields"].get("VersionId") == data["VersionId"]
+            ):
+                return record["id"]
+        return None
+
+    def get_table(self) -> pyairtable.Table:
+        """Get the Airtable table for the current base."""
         api = pyairtable.Api(self.api_key)
         base = api.base(self.base_name)
-        for table in base.tables():
-            for record in table.all():
-                if record.get("fields", {}):
-                    return table, None
-                if (
-                   record["fields"].get("Project") == data["Project"]
-                   and record["fields"].get("V#") == data["V#"]
-                   and record["fields"].get("VersionId") == data["VersionId"]
-                ):
-                    return table, record["id"]
-
-        return None, None
+        return next((table for table in base.tables()), None)

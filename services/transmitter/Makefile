@@ -7,7 +7,7 @@ ifeq ("$(wildcard $(ENVFILE))","")
 endif
 
 VERSION=$(shell python -c "import os;import sys;content={};f=open('$(CURDIR)/../../package.py');exec(f.read(),content);f.close();print(content['version'])")
-BASE_NAME := ayon-ftrack-leecher
+BASE_NAME := ayon-airtable-transmitter
 IMAGE := ynput/$(BASE_NAME):$(VERSION)
 BASH_CONTAINER_NAME := $(BASE_NAME)-bash-$(VERSION)
 
@@ -25,9 +25,9 @@ dev:
 		-v $(CURDIR):/service \
 		--env AYON_API_KEY=${AYON_API_KEY} \
 		--env AYON_SERVER_URL=${AYON_SERVER_URL} \
-		--env AYON_ADDON_NAME=ftrack \
+		--env AYON_ADDON_NAME=airtable \
 		--env AYON_ADDON_VERSION=$(VERSION) \
-		$(IMAGE) python -m leecher
+		$(IMAGE) python -m transmitter
 
 bash:
 	docker run --name $(BASH_CONTAINER_NAME) --rm -it --entrypoint /bin/bash $(IMAGE)

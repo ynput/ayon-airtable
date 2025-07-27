@@ -195,9 +195,6 @@ class AirtableListener:
         """
         try:
             airtable_webhook_payloads = self.webhook_handler.payloads()
-            airtable_payloads_data = next(airtable_webhook_payloads)
-            self.log.info(f"Receiving {airtable_payloads_data}")
-
             airtable_payloads = {
                 i: to_dict(payload) for i, payload in
                 enumerate(airtable_webhook_payloads)

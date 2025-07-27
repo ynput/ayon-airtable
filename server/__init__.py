@@ -170,7 +170,7 @@ class AirtableAddon(BaseServerAddon):
             )
         return True
 
-    async def check_airtable_token(self, api_key: str) -> bool:
+    async def check_airtable_token(self, api_key: str) -> Dict:
         """
         Verify if an Airtable API key is valid by listing bases.
 
@@ -178,7 +178,7 @@ class AirtableAddon(BaseServerAddon):
             api_key: Your Airtable API key
 
         Returns:
-            bool: True if token is valid, False otherwise
+            Dict: A dictionary with the validity of the API key and scopes.
         """
         url = "https://api.airtable.com/v0/meta/bases"
         headers = {"Authorization": f"Bearer {api_key}"}

@@ -1,6 +1,6 @@
 name: ayon-airtable-services
 services:
-  leecher:
+  processor:
     container_name: processor
     image: ynput/ayon-airtable-processor:0.1.0
     restart: unless-stopped
