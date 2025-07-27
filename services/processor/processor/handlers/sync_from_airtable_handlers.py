@@ -154,7 +154,6 @@ def sync_from_airtable_to_ayon(base_id: str, base_url: str,
     ayon_entity = ayon_entity_hub.get_or_query_entity_by_id(
         version_id, ["version"])
     # can we use much simpler function?
-    # ayon_entity = ayon_entity_hub.get_version_by_id(version_id)
     if ayon_entity is None:
         msg = "Unable to update a non existing entity."
         raise ValueError(msg)
