@@ -137,13 +137,14 @@ class AirtableTransmitter:
                 )
 
     def _get_sync_project_names(self):
-        """Get project names that are enabled for SG sync."""
+        """Get project names that are enabled for Airtable sync."""
         ayon_projects = ayon_api.get_projects(fields=["name", "attrib"])
 
-        project_names = []
-        for project in ayon_projects:
-            if project["attrib"].get("airtablePush"):
-                project_names.append(project["name"])
+        project_names = [
+            project["name"]
+            for project in ayon_projects
+            if project["attrib"].get("airtablePush")
+        ]
 
         return project_names
 
