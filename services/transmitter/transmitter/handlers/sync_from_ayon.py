@@ -66,7 +66,7 @@ class AyonAirtableHub:
             entity_hub = self.get_entity_hub(self.project_name)
 
         data_to_be_synced["project"] = self.project_name
-        data_to_be_synced["assignee"] = self.user
+        # data_to_be_synced["assignee"] = self.user
         data_to_be_synced["version_id"] = self.summary["entityId"]
         version_entity = entity_hub.get_version_by_id(self.summary["entityId"])
         if version_entity is None:
@@ -202,8 +202,6 @@ class AyonAirtableHub:
             multi_line_text_groups = {
                 self.attrib_map.get("product_name"),
                 self.attrib_map.get("version_id"),
-                # remove assignee if there is enterprise support
-                self.attrib_map.get("assignee"),
             }
             for airtable_key in data:
                 # Set field type based on known keys,
