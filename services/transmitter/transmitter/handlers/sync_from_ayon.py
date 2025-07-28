@@ -206,13 +206,19 @@ class AyonAirtableHub:
                 self.attrib_map.get("assignee"),
             }
             for airtable_key in data:
-                # Set field type based on known keys, otherwise default to singleLineText
+                # Set field type based on known keys,
+                # otherwise default to singleLineText
                 if airtable_key in single_line_text_groups:
-                    field_schema["fields"][airtable_key] = {"type": "singleLineText"}
+                    field_schema["fields"][airtable_key] = {
+                        "type": "singleLineText"
+                    }
                 elif airtable_key in multi_line_text_groups:
-                    field_schema["fields"][airtable_key] = {"type": "multilineText"}
+                    field_schema["fields"][airtable_key] = {
+                        "type": "multilineText"
+                    }
                 # elif airtable_key == self.attrib_map.get("assignee"):
-                #     field_schema["fields"][airtable_key] = {"type": "singleCollaborator"}
+                #     field_schema["fields"][airtable_key] = {
+                # "type": "singleCollaborator"}
                 elif airtable_key == self.attrib_map.get("status"):
                     field_schema["fields"][airtable_key] = {
                         "type": "singleSelect",

@@ -3,7 +3,7 @@
 from ayon_server.settings import (
     BaseSettingsModel,
     SettingsField,
-    task_types_enum
+    task_types_enum,
 )
 from ayon_server.settings.enum import secrets_enum
 
