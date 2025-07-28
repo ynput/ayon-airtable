@@ -5,11 +5,13 @@ AYON entities with Airtable records.
 """
 
 import logging
+import secrets
 from typing import Dict
 
 import ayon_api
 import pyairtable
 from ayon_api.entity_hub import EntityHub
+from pyairtable.models.schema import SingleSelectFieldOptions
 
 
 class AyonAirtableHub:
@@ -23,6 +25,7 @@ class AyonAirtableHub:
         """Initialize the Ayon Airtable Hub."""
         self.log = logging.getLogger(__name__)
         self.log.info("Initializing Ayon Airtable Hub.")
+        self.table_name = kwargs.get("table_name", "Shots")
         self.topic = kwargs.get("topic")
         self.user = kwargs.get("user")
         self.api_key = kwargs.get("api_key")
@@ -110,60 +113,44 @@ class AyonAirtableHub:
         self.log.info("Starting sync from AYON to Airtable.")
         data = self.parse_data_to_be_synced()
         self.log.info("Syncing data: %s", data)
-        if self.topic == "entity.version.created":
-            self.log.info("Creating new version in Airtable.")
-            # Here you would implement the logic to create a new version
-            # in Airtable
-            self.create_airtable_record(data)
-        elif self.topic == "entity.version.status_changed":
-            self.log.info("Updating version status in Airtable.")
-            # Here you would implement the logic to update the version status
-            # in Airtable
-            self.update_airtable_record(data)
-        else:
-            self.log.warning("Unknown action: %s. Skipping.", self.topic)
-
+        table = self.get_or_create_table(data)
+        self.create_or_update_airtable_record(table, data, self.topic)
         self.log.info("Sync from AYON to Airtable completed.")
 
-    def create_airtable_record(self, data: Dict) -> None:
-        """Create a record in Airtable.
-
-        Args:
-            data (Dict): The data to create the record with.
-        """
-        table = self.get_table()
-        if table is None:
-            self.log.error("No table found in Airtable base.")
-            return
-
-        self.log.info("Creating record in table %s.", table.name)
-        table.create(data)
-
-    def update_airtable_record(self, data: Dict) -> None:
+    def create_or_update_airtable_record(
+            self, table: pyairtable.Table,
+            data: Dict, topic: str) -> None:
         """Update a record in Airtable.
 
         Args:
+            table (pyairtable.Table): The Airtable table to update
+            the record in.
             data (Dict): The data to update the record with.
+            topic (str): The topic of the event, used to determine how to
+            update the record.
         """
-        table = self.get_table()
         if table is None:
             self.log.error("No table found in Airtable base.")
             return
-        record_id = self.get_record_id(table, data)
+        record_id = self.get_record_id(table, data, topic)
+        # data = self.convert_assignee_data(data)
         if record_id is None:
             self.log.info("No existing record found, creating a new one.")
             table.create(data)
         else:
-            self.log.info("Updating record %s in table %s.", record_id, table.name)
+            self.log.info("Updating record %s in table %s.",
+                          record_id, table.name)
             # Assuming data contains the fields to update
             table.update(record_id, data, replace=True)
-    @staticmethod
-    def get_record_id(table: pyairtable.Table, data: Dict) -> str:
+
+    def get_record_id(
+            self, table: pyairtable.Table, data: Dict, topic: str) -> str:
         """Get the Airtable record ID for the given data.
 
         Args:
             table (pyairtable.Table): The Airtable table to search in.
             data (Dict): The data to match against existing records.
+            topic (str): The topic of the event, used to determine how to
 
         Returns:
             record_id: str
@@ -171,16 +158,32 @@ class AyonAirtableHub:
         for record in table.all():
             if not record.get("fields", {}):
                 continue
-            if (
-                record["fields"].get("Project") == data["Project"]
-                and record["fields"].get("V#") == data["V#"]
-                and record["fields"].get("VersionId") == data["VersionId"]
+            fields = record.get("fields", {})
+            version = self.attrib_map.get("version")
+            project = self.attrib_map.get("project")
+            if topic == "entity.version.created" and (
+                fields.get(project) == data.get(project) and
+                fields.get(version) == data.get(version)
             ):
+                return record["id"]
+
+            version_id = self.attrib_map.get("version_id")
+            if topic == "entity.version.status_changed" and (
+                fields.get(project) == data.get(project) and
+                fields.get(version) == data.get(version) and
+                fields.get(version_id) == data.get(version_id)
+            ):
+
                 return record["id"]
         return None
 
-    def get_table(self) -> pyairtable.Table:
+    def get_or_create_table(self, data: Dict) -> pyairtable.Table:
         """Get the Airtable table for the current base.
+
+        If it does not exist, create it with the schema based on the data.
+
+        Args:
+            data (Dict): The data to be synced, used to determine the table.
 
         Returns:
             pyairtable.Table: The Airtable table object for the current base,
@@ -188,4 +191,112 @@ class AyonAirtableHub:
         """
         api = pyairtable.Api(self.api_key)
         base = api.base(self.base_name)
-        return next((table for table in base.tables()), None)
+        table = base.table(self.table_name)
+        if not table:
+            # Build the field schema dynamically based on attrib_map values
+            field_schema = {"fields": {}}
+            single_line_text_groups = {
+                self.attrib_map.get("version"),
+                self.attrib_map.get("project"),
+            }
+            multi_line_text_groups = {
+                self.attrib_map.get("product_name"),
+                self.attrib_map.get("version_id"),
+                # remove assignee if there is enterprise support
+                self.attrib_map.get("assignee"),
+            }
+            for airtable_key in data:
+                # Set field type based on known keys, otherwise default to singleLineText
+                if airtable_key in single_line_text_groups:
+                    field_schema["fields"][airtable_key] = {"type": "singleLineText"}
+                elif airtable_key in multi_line_text_groups:
+                    field_schema["fields"][airtable_key] = {"type": "multilineText"}
+                # elif airtable_key == self.attrib_map.get("assignee"):
+                #     field_schema["fields"][airtable_key] = {"type": "singleCollaborator"}
+                elif airtable_key == self.attrib_map.get("status"):
+                    field_schema["fields"][airtable_key] = {
+                        "type": "singleSelect",
+                        "options": self.get_status_schema_options()
+                    }
+                elif airtable_key == self.attrib_map.get("tags"):
+                    field_schema["fields"][airtable_key] = {
+                        "type": "multiSelect",
+                        "options": self.get_task_types_schema_option()
+                    }
+
+            table = base.create_table(self.table_name, field_schema)
+
+        return table
+
+    def get_status_schema_options(self) -> Dict:
+        """Get the status schema option for Airtable.
+
+        Returns:
+            Dict: The status schema option for Airtable.
+        """
+        choices = []
+        entity_hub = self._cached_hub
+        if entity_hub is None:
+            entity_hub = self.get_entity_hub(self.project_name)
+        project_entity = entity_hub.project_entity
+        all_status_attribs_matched = {
+            status.name: status.color for status
+            in project_entity.statuses
+        }
+
+        color_maps = {
+            "#434a56": "redLight1",
+            "#bababa": "yellowLight1",
+            "#3498db": "blueLight1",
+            "#ff9b0a": "yellowLight2",
+            "#00f0b4": "greenLight1",
+            "#cb1a1a": "redLight2"
+        }
+        for name, color in all_status_attribs_matched.items():
+            mapped_color = color_maps.get(color, color)
+            choices.append({"name": name, "color": mapped_color})
+
+        return SingleSelectFieldOptions(choices=choices)
+
+    def get_task_types_schema_option(self) -> Dict:
+        """Get the task types schema option for Airtable.
+
+        Returns:
+            Dict: The task types schema option for Airtable.
+        """
+        color_maps = [
+            "redLight1", "yellowLight1", "blueLight1",
+            "yellowLight2", "greenLight1", "redLight2"
+        ]
+        task_types = self.attrib_map.get("task_types", [])
+        choices = [{
+                "name": task_type,
+                "color": secrets.choice(color_maps)
+            } for task_type in task_types]
+
+        return SingleSelectFieldOptions(choices=choices)
+
+    # def convert_assignee_data(self, data: Dict) -> Dict:
+    #     """Convert assignee data to a format suitable for Airtable.
+
+    #     Args:
+    #         data (Dict): The data to convert.
+
+    #     Returns:
+    #         Dict: The converted data with the assignee field formatted.
+    #     """
+    #     api = pyairtable.Api(self.api_key)
+    #     base = api.base(self.base_name)
+    #     assignee = data.get("Assignee")
+    #     if assignee:
+    #         collaborators = base.collaborators()
+    #         for collaborator in collaborators:
+    #             if collaborator.name == assignee:
+    #                 target_collaborator = collaborator
+    #                 break
+    #         data["Assignee"] = {
+    #             "id": target_collaborator.id,
+    #             "email": target_collaborator.email,
+    #             "name": target_collaborator.name,
+    #         }
+    #     return data

@@ -52,6 +52,7 @@ class AirtableTransmitter:
             self.poll_interval = service_settings["poll_interval"]
             airtable_secret = ayon_api.get_secret(
                 service_settings["script_key"])
+            self.table_name = service_settings["table_name"]
 
             if not isinstance(airtable_secret, dict):
                 msg = (
@@ -124,6 +125,7 @@ class AirtableTransmitter:
                     continue
 
                 kwargs = {
+                    "table_name": self.table_name,
                     "topic": source_event["topic"],
                     "user": source_event["user"],
                     "api_key": self.airtable_api_key,

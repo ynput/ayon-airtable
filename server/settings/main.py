@@ -1,6 +1,10 @@
 """Settings for the addon."""
 
-from ayon_server.settings import BaseSettingsModel, SettingsField
+from ayon_server.settings import (
+    BaseSettingsModel,
+    SettingsField,
+    task_types_enum
+)
 from ayon_server.settings.enum import secrets_enum
 
 
@@ -34,13 +38,25 @@ class AirtableAttributeSettings(BaseSettingsModel):
         default="VersionId", title="Version ID",
         description="ID of the version in Airtable."
     )
+    task_types: list[str] = SettingsField(
+        default_factory=list, title="Task Types",
+        description=(
+            "List of task types to used as 'Type' field options "
+            "when syncing with Airtable."
+        ),
+        enum_resolver=task_types_enum,
+        section="Airtable Field Settings"
+    )
 
 
 class AirtableServiceSettings(BaseSettingsModel):
     """Settings for the addon."""
     base_name: str = SettingsField(
         "", title="Base Name",
-        description="Name of the Airtable Base")
+        description="Name of the Airtable Base to sync with AYON.")
+    table_name: str = SettingsField(
+        "Shots", title="Table Name",
+        description="Name of the Airtable Table to sync with AYON.")
     script_key: str = SettingsField(
     default="",
     enum_resolver=secrets_enum,
@@ -78,10 +94,12 @@ AIRTABLE_DEFAULT_VALUES = {
         "status": "Status",
         "tags": "Type",
         "product_name": "VFX_ID",
-        "version_id": "VersionId"
+        "version_id": "VersionId",
+        "task_types": [],
     },
     "service_settings": {
         "base_name": "",
+        "table_name": "Shots",
         "script_key": "",
         "poll_interval": 10
     }
