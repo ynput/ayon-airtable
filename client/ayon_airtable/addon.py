@@ -46,6 +46,7 @@ class AirtableAddon(AYONAddon, IPluginPaths):
         server_settings = addon_settings["service_settings"]
         os.environ["AIRTABLE_API_KEY"] = server_settings["script_key"]
         os.environ["AIRTABLE_BASE_NAME"] = server_settings["base_name"]
+        os.environ["AIRTABLE_TABLE_NAME"] = server_settings["table_name"]
 
     def get_plugin_paths(self) -> Dict[str, Any]:  # noqa: PLR6301
         """Get the plugin paths for the Airtable addon.
