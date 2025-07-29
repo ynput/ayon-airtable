@@ -44,9 +44,19 @@ class AirtableAddon(AYONAddon, IPluginPaths):
             addon_settings
         )
         server_settings = addon_settings["service_settings"]
+        attribs_map = addon_settings["attribute_maps"]
         os.environ["AIRTABLE_API_KEY"] = server_settings["script_key"]
         os.environ["AIRTABLE_BASE_NAME"] = server_settings["base_name"]
         os.environ["AIRTABLE_TABLE_NAME"] = server_settings["table_name"]
+        os.environ["AIRTABLE_PROJECT_FIELD"] = (
+            attribs_map.get("project", "")
+        )
+        os.environ["AIRTABLE_PRODUCT_NAME_FIELD"] = (
+            attribs_map.get("product_name", "")
+        )
+        os.environ["AIRTABLE_VERSION_FIELD"] = (
+            attribs_map.get("version", "")
+        )
 
     def get_plugin_paths(self) -> Dict[str, Any]:  # noqa: PLR6301
         """Get the plugin paths for the Airtable addon.
