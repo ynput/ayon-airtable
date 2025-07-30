@@ -1,12 +1,18 @@
 
 
+"""Plugin to collect product names for editorial return from Airtable.
+
+This module defines a Pyblish context plugin that retrieves product names
+from Airtable records based on the current project and exposes them for
+user selection during the publishing process.
+"""
+
 import os
 
 import pyblish.api
+from ayon_airtable.common.airtable_api_handlers import get_airtable_table
 from ayon_core.lib import EnumDef
 from ayon_core.pipeline import get_current_project_name
-
-from ayon_airtable.common.airtable_api_handlers import get_airtable_table
 
 
 class CollectProductNameForEditorialReturn(pyblish.api.ContextPlugin):

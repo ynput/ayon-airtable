@@ -16,7 +16,7 @@ class CollectEditorialReturn(pyblish.api.InstancePlugin):
     label = "Collect Editorial Return"
     families = ["editorial", "editorial_pkg"]  # noqa: RUF012
 
-    def process(self, instance: pyblish.api.Instance) -> None:  # noqa: PLR6301
+    def process(self, instance: pyblish.api.Instance) -> None:
         """Collect editorial return information from the instance."""
         airtable_table = instance.context.data.get("airtableTable")
         if not airtable_table:

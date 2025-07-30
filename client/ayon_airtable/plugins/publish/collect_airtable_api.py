@@ -1,8 +1,9 @@
 
+"""Collects Airtable API and stores them in the context data."""
+
 import os
 
 import pyblish.api
-
 from ayon_airtable.common.BaseHandler import (
     get_airtable_base,
     get_airtable_table,
