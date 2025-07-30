@@ -34,7 +34,6 @@ class CollectProductNameForEditorialReturn(pyblish.api.ContextPlugin):
         attr_values = self.get_attr_values_from_data(context.data)
         context.data["productNames"] = attr_values.get("productNames", [])
 
-
     @classmethod
     def get_attribute_defs(cls) -> list:
         """Return attribute definitions for product names selection.
