@@ -8,6 +8,7 @@ management.
 import os
 from typing import Any, Dict
 
+import ayon_api
 from ayon_core.addon import (
     AYONAddon,
     IPluginPaths,
@@ -45,7 +46,8 @@ class AirtableAddon(AYONAddon, IPluginPaths):
         )
         server_settings = addon_settings["service_settings"]
         attribs_map = addon_settings["attribute_maps"]
-        os.environ["AIRTABLE_API_KEY"] = server_settings["script_key"]
+        os.environ["AIRTABLE_API_KEY"] = ayon_api.get_secret(
+            server_settings["script_key"]).get("value", "")
         os.environ["AIRTABLE_BASE_NAME"] = server_settings["base_name"]
         os.environ["AIRTABLE_TABLE_NAME"] = server_settings["table_name"]
         os.environ["AIRTABLE_PROJECT_FIELD"] = (
