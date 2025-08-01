@@ -128,7 +128,7 @@ class AirtableProcessor:
 
                 source_event = ayon_api.get_event(event["dependsOn"])
                 payload = source_event["payload"]
-                table_event_id = payload["id"]
+                table_event_id = source_event["id"]
                 failed = False
 
                 if payload.get("action") == "airtable-leech":
