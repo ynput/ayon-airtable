@@ -197,8 +197,13 @@ class AyonAirtableHub:
         """
         api = pyairtable.Api(self.api_key)
         base = api.base(self.base_name)
-        table = base.table(self.table_name)
-        if not table:
+        try:
+            table = base.table(self.table_name)
+
+        except Exception as e:  # noqa: BLE001
+            self.log.info(
+                "Creating new table %s for %s", self.table_name, e
+            )
             # Build the field schema dynamically based on attrib_map values
             field_schema = {"fields": {}}
             single_line_text_groups = {
