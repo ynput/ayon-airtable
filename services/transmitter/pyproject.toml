@@ -2,7 +2,7 @@
 name = "airtable-transmitter"
 version = "0.1.0"
 description = ""
-authors = [{name = "Ynput s.r.o.", email =" @ynput.io"}]
+authors = [{name = "Ynput s.r.o.", email ="info@ynput.io"}]
 requires-python = ">=3.9"
 dependencies = [
     "ayon-python-api==1.0.11",

@@ -155,32 +155,26 @@ class AyonAirtableHub:
         Returns:
             record_id: str
         """
-        try:
-            for record in table.all():
-                if not record.get("fields", {}):
-                    continue
-                fields = record.get("fields", {})
-                version = self.attrib_map.get("version")
-                project = self.attrib_map.get("project")
-                if topic == "entity.version.created" and (
-                    fields.get(project) == data.get(project) and
-                    fields.get(version) == data.get(version)
-                ):
-                    return record["id"]
+        for record in table.all():
+            if not record.get("fields", {}):
+                continue
+            fields = record.get("fields", {})
+            version = self.attrib_map.get("version")
+            project = self.attrib_map.get("project")
+            if topic == "entity.version.created" and (
+                fields.get(project) == data.get(project) and
+                fields.get(version) == data.get(version)
+            ):
+                return record["id"]
 
-                version_id = self.attrib_map.get("version_id")
-                if topic == "entity.version.status_changed" and (
-                    fields.get(project) == data.get(project) and
-                    fields.get(version) == data.get(version) and
-                    fields.get(version_id) == data.get(version_id)
-                ):
+            version_id = self.attrib_map.get("version_id")
+            if topic == "entity.version.status_changed" and (
+                fields.get(project) == data.get(project) and
+                fields.get(version) == data.get(version) and
+                fields.get(version_id) == data.get(version_id)
+            ):
 
-                    return record["id"]
-        except Exception as e:
-            self.log.exception(
-                "The scope 'data.records:read' needed "
-                "to be added for your access token for :%s", e  # noqa: TRY401
-                )
+                return record["id"]
         return None
 
     def get_or_create_table(self, data: Dict) -> pyairtable.Table:
@@ -197,13 +191,8 @@ class AyonAirtableHub:
         """
         api = pyairtable.Api(self.api_key)
         base = api.base(self.base_name)
-        try:
-            table = base.table(self.table_name)
-
-        except Exception as e:  # noqa: BLE001
-            self.log.info(
-                "Creating new table %s for %s", self.table_name, e
-            )
+        table = base.table(self.table_name)
+        if not table:
             # Build the field schema dynamically based on attrib_map values
             field_schema = {"fields": {}}
             single_line_text_groups = {
