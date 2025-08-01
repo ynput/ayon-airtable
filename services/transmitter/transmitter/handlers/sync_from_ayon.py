@@ -78,7 +78,7 @@ class AyonAirtableHub:
             msg = "Entity is immutable, aborting..."
             raise ValueError(msg)
         data_to_be_synced["status"] = version_entity.status
-        data_to_be_synced["version"] = version_entity.name
+        data_to_be_synced["version"] = version_entity.get_version()
         if version_entity.task_id:
             task = ayon_api.get_task_by_id(
                 self.project_name,
