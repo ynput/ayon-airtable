@@ -155,26 +155,32 @@ class AyonAirtableHub:
         Returns:
             record_id: str
         """
-        for record in table.all():
-            if not record.get("fields", {}):
-                continue
-            fields = record.get("fields", {})
-            version = self.attrib_map.get("version")
-            project = self.attrib_map.get("project")
-            if topic == "entity.version.created" and (
-                fields.get(project) == data.get(project) and
-                fields.get(version) == data.get(version)
-            ):
-                return record["id"]
+        try:
+            for record in table.all():
+                if not record.get("fields", {}):
+                    continue
+                fields = record.get("fields", {})
+                version = self.attrib_map.get("version")
+                project = self.attrib_map.get("project")
+                if topic == "entity.version.created" and (
+                    fields.get(project) == data.get(project) and
+                    fields.get(version) == data.get(version)
+                ):
+                    return record["id"]
 
-            version_id = self.attrib_map.get("version_id")
-            if topic == "entity.version.status_changed" and (
-                fields.get(project) == data.get(project) and
-                fields.get(version) == data.get(version) and
-                fields.get(version_id) == data.get(version_id)
-            ):
+                version_id = self.attrib_map.get("version_id")
+                if topic == "entity.version.status_changed" and (
+                    fields.get(project) == data.get(project) and
+                    fields.get(version) == data.get(version) and
+                    fields.get(version_id) == data.get(version_id)
+                ):
 
-                return record["id"]
+                    return record["id"]
+        except Exception as e:
+            self.log.exception(
+                "The scope 'data.records:read' needed "
+                "to be added for your access token for :%s", e  # noqa: TRY401
+                )
         return None
 
     def get_or_create_table(self, data: Dict) -> pyairtable.Table:
