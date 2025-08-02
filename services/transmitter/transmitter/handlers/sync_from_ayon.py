@@ -87,10 +87,7 @@ class AyonAirtableHub:
                 fields=["type"]
             )
             task_name = [task["type"]] if task else []
-        else:
-            task_name = []
-
-        data_to_be_synced["tags"] = task_name
+            data_to_be_synced["tags"] = task_name
 
         product_entity = entity_hub.get_product_by_id(self.summary["parentId"])
         if product_entity is None:
@@ -114,7 +111,7 @@ class AyonAirtableHub:
         self.log.info("Starting sync from AYON to Airtable.")
         data = self.parse_data_to_be_synced()
         self.log.info("Syncing data: %s", data)
-        table = self.get_or_create_table(data)
+        table = self.get_or_create_table()
         self.create_or_update_airtable_record(table, data, self.topic)
         self.log.info("Sync from AYON to Airtable completed.")
 
@@ -178,7 +175,7 @@ class AyonAirtableHub:
                 return record["id"]
         return None
 
-    def get_or_create_table(self, data: Dict) -> pyairtable.Table:
+    def get_or_create_table(self) -> pyairtable.Table:
         """Get the Airtable table for the current base.
 
         If it does not exist, create it with the schema based on the data.
@@ -198,98 +195,9 @@ class AyonAirtableHub:
             self.log.exception(
                 "Error retrieving table %s", self.table_name
             )
-            # Build the field schema dynamically based on attrib_map values
-            field_schema = {"fields": {}}
-            single_line_text_groups = {
-                self.attrib_map.get("version"),
-                self.attrib_map.get("project"),
-                }
-            multi_line_text_groups = {
-                self.attrib_map.get("product_name"),
-                self.attrib_map.get("version_id"),
-            }
-            for airtable_key in data:
-                # Set field type based on known keys,
-                # otherwise default to singleLineText
-                if airtable_key in single_line_text_groups:
-                    field_schema["fields"][airtable_key] = {
-                        "type": "singleLineText"
-                    }
-                elif airtable_key in multi_line_text_groups:
-                    field_schema["fields"][airtable_key] = {
-                        "type": "multilineText"
-                    }
-                # elif airtable_key == self.attrib_map.get("assignee"):
-                #     field_schema["fields"][airtable_key] = {
-                # "type": "singleCollaborator"}
-                elif airtable_key == self.attrib_map.get("status"):
-                    field_schema["fields"][airtable_key] = {
-                        "type": "singleSelect",
-                        "options": self.get_status_schema_options().dict()
-                    }
-                elif airtable_key == self.attrib_map.get("tags"):
-                    field_schema["fields"][airtable_key] = {
-                        "type": "multiSelect",
-                        "options": self.get_task_types_schema_option().dict()
-                    }
-
-            table = self.base.create_table(
-                self.table_name, field_schema["fields"])
+            raise
 
         return table
-
-    def get_status_schema_options(self) -> Dict:
-        """Get the status schema option for Airtable.
-
-        Returns:
-            Dict: The status schema option for Airtable.
-        """
-        choices = []
-        entity_hub = self._cached_hub
-        if entity_hub is None:
-            entity_hub = self.get_entity_hub(self.project_name)
-        project_entity = entity_hub.project_entity
-        all_status_attribs_matched = {
-            status.name: status.color for status
-            in project_entity.statuses
-        }
-
-        color_maps = {
-            "#434a56": "redLight1",
-            "#bababa": "yellowLight1",
-            "#3498db": "blueLight1",
-            "#ff9b0a": "yellowLight2",
-            "#00f0b4": "greenLight1",
-            "#cb1a1a": "redLight2"
-        }
-        for name, color in all_status_attribs_matched.items():
-            mapped_color = color_maps.get(color, "redLight1")
-            choices.append({
-                "id": name,
-                "name": name,
-                "color": mapped_color
-            })
-
-        return SingleSelectFieldOptions(choices=choices)
-
-    def get_task_types_schema_option(self) -> Dict:
-        """Get the task types schema option for Airtable.
-
-        Returns:
-            Dict: The task types schema option for Airtable.
-        """
-        color_maps = [
-            "redLight1", "yellowLight1", "blueLight1",
-            "yellowLight2", "greenLight1", "redLight2"
-        ]
-        task_types = self.attrib_map.get("task_types", [])
-        choices = [{
-                "id": task_type,
-                "name": task_type,
-                "color": secrets.choice(color_maps)
-            } for task_type in task_types]
-
-        return SingleSelectFieldOptions(choices=choices)
 
     # def convert_assignee_data(self, data: Dict) -> Dict:
     #     """Convert assignee data to a format suitable for Airtable.

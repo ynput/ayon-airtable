@@ -3,7 +3,6 @@
 from ayon_server.settings import (
     BaseSettingsModel,
     SettingsField,
-    task_types_enum,
 )
 from ayon_server.settings.enum import secrets_enum
 
@@ -37,15 +36,6 @@ class AirtableAttributeSettings(BaseSettingsModel):
     version_id: str = SettingsField(
         default="VersionId", title="Version ID",
         description="ID of the version in Airtable."
-    )
-    task_types: list[str] = SettingsField(
-        default_factory=list, title="Task Types",
-        description=(
-            "List of task types to used as 'Type' field options "
-            "when syncing with Airtable."
-        ),
-        enum_resolver=task_types_enum,
-        section="Airtable Field Settings"
     )
 
 
@@ -95,7 +85,6 @@ AIRTABLE_DEFAULT_VALUES = {
         "tags": "Type",
         "product_name": "VFX_ID",
         "version_id": "VersionId",
-        "task_types": [],
     },
     "service_settings": {
         "base_name": "",
