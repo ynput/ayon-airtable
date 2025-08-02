@@ -195,6 +195,9 @@ class AyonAirtableHub:
             table.all()
 
         except Exception:
+            self.log.exception(
+                "Error retrieving table %s", self.table_name
+            )
             # Build the field schema dynamically based on attrib_map values
             field_schema = {"fields": {}}
             single_line_text_groups = {
@@ -230,7 +233,8 @@ class AyonAirtableHub:
                         "options": self.get_task_types_schema_option().dict()
                     }
 
-            table = self.base.create_table(self.table_name, field_schema)
+            table = self.base.create_table(
+                self.table_name, field_schema["fields"])
 
         return table
 
