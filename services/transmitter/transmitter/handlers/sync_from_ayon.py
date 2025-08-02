@@ -29,7 +29,7 @@ class AyonAirtableHub:
         self.topic = kwargs.get("topic")
         self.user = kwargs.get("user")
         self.api_key = kwargs.get("api_key")
-        self.base_name = kwargs.get("base_name")
+        self.base = kwargs.get("base")
         self.project_name = kwargs.get("project_name")
         self.summary = kwargs.get("summary")
         self.payload = kwargs.get("payload")
@@ -78,14 +78,15 @@ class AyonAirtableHub:
             msg = "Entity is immutable, aborting..."
             raise ValueError(msg)
         data_to_be_synced["status"] = version_entity.status
-        data_to_be_synced["version"] = version_entity.get_version()
+        airtable_version = f"{version_entity.get_version():03}"
+        data_to_be_synced["version"] = airtable_version
         if version_entity.task_id:
             task = ayon_api.get_task_by_id(
                 self.project_name,
                 version_entity.task_id,
-                fields=["name"]
+                fields=["type"]
             )
-            task_name = [task["name"]] if task else []
+            task_name = [task["type"]] if task else []
         else:
             task_name = []
 
@@ -159,19 +160,19 @@ class AyonAirtableHub:
             if not record.get("fields", {}):
                 continue
             fields = record.get("fields", {})
-            version = self.attrib_map.get("version")
             project = self.attrib_map.get("project")
+            product_name = self.attrib_map.get("product_name")
             if topic == "entity.version.created" and (
-                fields.get(project) == data.get(project) and
-                fields.get(version) == data.get(version)
+                data.get(project) in fields.get(project) and
+                data.get(product_name) in fields.get(product_name)
             ):
                 return record["id"]
 
             version_id = self.attrib_map.get("version_id")
             if topic == "entity.version.status_changed" and (
-                fields.get(project) == data.get(project) and
-                fields.get(version) == data.get(version) and
-                fields.get(version_id) == data.get(version_id)
+                data.get(project) in fields.get(project) and
+                data.get(product_name) in fields.get(product_name) and
+                data.get(version_id) in fields.get(version_id)
             ):
 
                 return record["id"]
@@ -189,16 +190,17 @@ class AyonAirtableHub:
             pyairtable.Table: The Airtable table object for the current base,
             or None if not found.
         """
-        api = pyairtable.Api(self.api_key)
-        base = api.base(self.base_name)
-        table = base.table(self.table_name)
-        if not table:
+        try:
+            table = self.base.table(self.table_name)
+            table.all()
+
+        except Exception:
             # Build the field schema dynamically based on attrib_map values
             field_schema = {"fields": {}}
             single_line_text_groups = {
                 self.attrib_map.get("version"),
                 self.attrib_map.get("project"),
-            }
+                }
             multi_line_text_groups = {
                 self.attrib_map.get("product_name"),
                 self.attrib_map.get("version_id"),
@@ -220,15 +222,15 @@ class AyonAirtableHub:
                 elif airtable_key == self.attrib_map.get("status"):
                     field_schema["fields"][airtable_key] = {
                         "type": "singleSelect",
-                        "options": self.get_status_schema_options()
+                        "options": self.get_status_schema_options().dict()
                     }
                 elif airtable_key == self.attrib_map.get("tags"):
                     field_schema["fields"][airtable_key] = {
                         "type": "multiSelect",
-                        "options": self.get_task_types_schema_option()
+                        "options": self.get_task_types_schema_option().dict()
                     }
 
-            table = base.create_table(self.table_name, field_schema)
+            table = self.base.create_table(self.table_name, field_schema)
 
         return table
 
@@ -257,8 +259,12 @@ class AyonAirtableHub:
             "#cb1a1a": "redLight2"
         }
         for name, color in all_status_attribs_matched.items():
-            mapped_color = color_maps.get(color, color)
-            choices.append({"name": name, "color": mapped_color})
+            mapped_color = color_maps.get(color, "redLight1")
+            choices.append({
+                "id": name,
+                "name": name,
+                "color": mapped_color
+            })
 
         return SingleSelectFieldOptions(choices=choices)
 
@@ -274,6 +280,7 @@ class AyonAirtableHub:
         ]
         task_types = self.attrib_map.get("task_types", [])
         choices = [{
+                "id": task_type,
                 "name": task_type,
                 "color": secrets.choice(color_maps)
             } for task_type in task_types]
@@ -290,7 +297,7 @@ class AyonAirtableHub:
     #         Dict: The converted data with the assignee field formatted.
     #     """
     #     api = pyairtable.Api(self.api_key)
-    #     base = api.base(self.base_name)
+    #     base = api.base(self.base_id)
     #     assignee = data.get("Assignee")
     #     if assignee:
     #         collaborators = base.collaborators()
