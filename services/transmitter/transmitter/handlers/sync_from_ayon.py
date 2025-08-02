@@ -5,13 +5,11 @@ AYON entities with Airtable records.
 """
 
 import logging
-import secrets
 from typing import Dict
 
 import ayon_api
 import pyairtable
 from ayon_api.entity_hub import EntityHub
-from pyairtable.models.schema import SingleSelectFieldOptions
 
 
 class AyonAirtableHub:
