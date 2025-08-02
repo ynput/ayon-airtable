@@ -11,8 +11,10 @@ import logging
 import sys
 import time
 import traceback
+from typing import Dict, Optional
 
 import ayon_api
+import pyairtable
 
 from .handlers.sync_from_ayon import AyonAirtableHub
 
@@ -70,10 +72,62 @@ class AirtableTransmitter:
                 )
                 raise ValueError(msg)  # noqa: TRY301
 
+            try:
+                bases = self.get_bases_data_by_api_key()
+                self.base = self.get_base_by_name(bases)
+            except Exception:
+                self.log.exception(
+                    "Fails to connect Airtable Base Instance. "
+                    "Make sure set the correct API key"
+                    " in https://airtable.com/create/tokens/. "
+                    "Make sure the scope added "
+                    "with data.records.read and data.records.write"
+                )
+                raise
         except Exception:
             self.log.exception("Unable to get Addon settings from the server.")
             self.log.exception(traceback.format_exc())
             raise
+
+    def _get_api_token(
+            self, airtable_api_key: Optional[str] = None) -> pyairtable.Api:
+        """Get Api access token to access Airtable.
+
+        Returns:
+            pyairtable.Api: Api access
+        """
+        if airtable_api_key is None:
+            airtable_api_key = self.airtable_api_key
+        return pyairtable.Api(self.airtable_api_key)
+
+    def get_bases_data_by_api_key(self) -> Dict:
+        """Get Airtable bases data by API key.
+
+        Returns:
+            Dict: The data of Airtable bases retrieved using the API key.
+        """
+        api = self._get_api_token()
+        base_urls = api.urls.bases
+        return api.get(base_urls)
+
+    def get_base_by_name(
+            self,
+            bases: pyairtable.Api.bases,
+            base_name: Optional[str] = None
+        ) -> pyairtable.Base:
+        """Get Airtable base by base name.
+
+        Returns:
+            pyairtable.Base: Base
+        """
+        api = self._get_api_token()
+        if base_name is None:
+            base_name = self.airtable_base_name
+        for base_set in bases.values():
+            for base in base_set:
+                if base_name in base["name"]:
+                    return api.base(base["id"])
+        return None
 
     def start_processing(self) -> None:
         """Main loop querying AYON for `entity.*` events.
@@ -129,7 +183,7 @@ class AirtableTransmitter:
                     "topic": source_event["topic"],
                     "user": source_event["user"],
                     "api_key": self.airtable_api_key,
-                    "base_name": self.airtable_base_name,
+                    "base": self.base,
                     "project_name": project_name,
                     "summary": source_event["summary"],
                     "payload": source_event["payload"],
