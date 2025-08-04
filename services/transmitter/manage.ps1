@@ -38,7 +38,7 @@ function build {
 }
 
 function clean {
-  & docker rmi $(IMAGE_FULL_NAME)
+  & docker rmi $IMAGE_FULL_NAME
 }
 
 function dist {

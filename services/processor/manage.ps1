@@ -38,7 +38,7 @@ function build {
 }
 
 function clean {
-  & docker rmi $(IMAGE_FULL_NAME)
+  & docker rmi $IMAGE_FULL_NAME
 }
 
 function dist {
@@ -63,12 +63,12 @@ function dev {
   load-env
   & docker run --rm -ti `
     -v "$($script_dir):/service" `
-  	--hostname airtableproc `
-  	--env AYON_API_KEY=$env:AYON_API_KEY `
-  	--env AYON_SERVER_URL=$env:AYON_SERVER_URL `
-  	--env AYON_ADDON_NAME=airtable `
-  	--env AYON_ADDON_VERSION=$ADDON_VERSION `
-  	"$($IMAGE_FULL_NAME)" python -m processor
+    --hostname airtableproc `
+    --env AYON_API_KEY=$env:AYON_API_KEY `
+    --env AYON_SERVER_URL=$env:AYON_SERVER_URL `
+    --env AYON_ADDON_NAME=airtable `
+    --env AYON_ADDON_VERSION=$ADDON_VERSION `
+    "$($IMAGE_FULL_NAME)" python -m processor
 }
 
 function bash {
