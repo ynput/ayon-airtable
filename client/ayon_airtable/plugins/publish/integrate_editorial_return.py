@@ -3,70 +3,60 @@
 This module defines a Pyblish plugin that updates Airtable records
 with editorial return data.
 """
+from typing import ClassVar
 
-import operator
-
-import pyairtable
 import pyblish.api
+from ayon_airtable.backend.rest_stub import AirtableRestStub
 
 
 class CollectEditorialReturn(pyblish.api.InstancePlugin):
     """Publish editorial return information from the context."""
     order = pyblish.api.IntegratorOrder + 0.499
     label = "Collect Editorial Return"
-    families = ["editorial", "editorial_pkg"]  # noqa: RUF012
+    families: ClassVar[list[str]] = ["editorial", "editorial_pkg"]
 
     def process(self, instance: pyblish.api.Instance) -> None:
         """Collect editorial return information from the instance."""
-        airtable_table = instance.context.data.get("airtableTable")
-        if not airtable_table:
-            self.log.debug(
-                "Airtable table is not set in the context data."
-            )
-            return
-        if not instance.data.get("productNames"):
-            self.log.debug(
-                "No product names found in the instance data."
-            )
-            return
-
+        useful_data = self.get_data(instance)
         for product_name in instance.data.get("productNames", []):
-            record_id = self.get_record_id(
-                airtable_table, product_name,
-                instance.context.data.get("airtableVersionField"),
-                instance.context.data.get("airtableProductNameField"),
+            record_id = AirtableRestStub.get_record_id(
+                api_key=useful_data["api_key"],
+                base_name=useful_data["base_name"],
+                table_name=useful_data["table_name"],
+                project_name=useful_data["project_name"],
+                product_name=product_name,
+                project_name_field=useful_data["project_name_field"],
+                product_name_field=useful_data["product_name_field"]
             )
 
-            airtable_table.update(
-                record_id, {"Editorial_Return": instance.name}, replace=True
+            AirtableRestStub.update_record(
+                api_key=useful_data["api_key"],
+                base_name=useful_data["base_name"],
+                table_name=useful_data["table_name"],
+                record_id=record_id,
+                fields={"Editorial_Return": instance.name},
+                replace=True
             )
 
     @staticmethod
-    def get_record_id(table: pyairtable.Table, product_name: str,
-                      version_map: str, product_name_map: str) -> str:
-        """Retrieve the record ID from the Airtable table.
+    def get_data(instance: pyblish.api.Instance) -> dict:
+        """Get useful data from the instance.
 
         Args:
-            table: The Airtable table to search.
-            product_name: The product name to match.
-            version_map: The field name for the version.
-            product_name_map: The field name for the product name.
+            instance: The Pyblish instance to extract data from.
 
         Returns:
-            The record ID as a string if found, otherwise an empty string.
+            dict: A dictionary containing Airtable and project information.
         """
-        records = []
-        for record in table.all():
-            fields = record.get("fields", {})
-            if not fields:
-                continue
-            if fields.get(product_name_map) == product_name and \
-                fields.get(version_map):
-                records.append({
-                    "id": record["id"],
-                    "version": fields[version_map]
-            })
-        if records:
-            latest = max(records, key=operator.itemgetter("version"))
-            return latest["id"]
-        return ""
+        return {
+            "api_key": instance.context.data.get("airtableApi"),
+            "base_name": instance.context.data.get("airtableBase"),
+            "table_name": instance.context.data.get("airtableTable"),
+            "project_name": instance.context.data.get("projectName"),
+            "project_name_field": instance.context.data.get(
+                "airtableProjectNameField"
+            ),
+            "product_name_field": instance.context.data.get(
+                "airtableProductNameField"
+            ),
+        }

@@ -8,29 +8,38 @@ user selection during the publishing process.
 """
 
 import os
+from typing import ClassVar
 
 import pyblish.api
-from ayon_airtable.common.airtable_api_handlers import get_airtable_table
+from ayon_airtable.backend.rest_stub import AirtableRestStub
 from ayon_core.lib import EnumDef
 from ayon_core.pipeline import get_current_project_name
+from ayon_core.pipeline.publish import PublishError
 
 
 class CollectProductNameForEditorialReturn(pyblish.api.ContextPlugin):
     """Collects product name from users for editorial return."""
     order = pyblish.api.CollectorOrder
     label = "Collect Product Name For Editorial Return (Airtable)"
-    families = ["editorial", "editorial_pkg"]  # noqa: RUF012
+    families: ClassVar[list[str]] = ["editorial", "editorial_pkg"]
 
     def process(self, context: pyblish.api.Context) -> None:
         """Collect product names from the user's preference.
 
         Args:
             context (pyblish.api.Context): The context of the plugin.
+
+        Raises:
+            PublishError: If the Airtable table is not set in the context data.
         """
-        airtable_table = get_airtable_table()
+        airtable_table = AirtableRestStub.get_table(
+            context.data.get("airtableApi"),
+            context.data.get("airtableBase"),
+            context.data.get("airtableTable")
+        )
         if not airtable_table:
-            self.log.debug("Airtable table is not set in the context data.")
-            return
+            msg = "Airtable table is not set in the context data."
+            raise PublishError(msg)
         attr_values = self.get_attr_values_from_data(context.data)
         context.data["productNames"] = attr_values.get("productNames", [])
 
@@ -39,24 +48,20 @@ class CollectProductNameForEditorialReturn(pyblish.api.ContextPlugin):
         """Return attribute definitions for product names selection.
 
         Returns:
-        -------
-        list
-            List of EnumDef objects for product name selection.
+        list: List of EnumDef objects for product name selection.
         """
-        export_texture_set_enum = []
-        project_field = os.getenv("AIRTABLE_PROJECT_FIELD", "")
-        product_name_field = os.getenv("AIRTABLE_PRODUCT_NAME_FIELD", "")
+        airtable_data = {
+            "api_key": os.getenv("AIRTABLE_API_KEY"),
+            "base_name": os.getenv("AIRTABLE_BASE_NAME"),
+            "table_name": os.getenv("AIRTABLE_TABLE_NAME"),
+            "project_name": get_current_project_name(),
+            "product_name_field": os.getenv("AIRTABLE_PRODUCT_NAME_FIELD"),
+            "project_name_field": os.getenv("AIRTABLE_PROJECT_NAME_FIELD"),
+        }
 
-        airtable_table = get_airtable_table()
-        if airtable_table:
-            for record in airtable_table.all():
-                fields = record.get("fields", {})
-                if not fields:
-                    continue
-                if fields.get(project_field) == get_current_project_name():
-                    product_name = fields.get(product_name_field, "")
-                    if product_name:
-                        export_texture_set_enum.append(product_name)
+        export_texture_set_enum = (
+            AirtableRestStub.get_product_name_field(**airtable_data)
+        ) or []
 
         return [
                 EnumDef(
