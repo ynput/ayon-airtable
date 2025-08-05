@@ -47,7 +47,8 @@ class AirtableAddon(AYONAddon, ITrayService, IPluginPaths):
         )
         self.webserver = None
 
-    def add_implementation_envs(self, env, app) -> None:
+    def add_implementation_envs(
+            self, env: dict[str, Any], app: object) -> None:
         """Add implementation-specific environment variables.
 
         Args:

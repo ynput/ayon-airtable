@@ -1,8 +1,12 @@
-from qtpy import QtWidgets
+"""Dialog and tray menu integration for the AYON Airtable Addon.
+
+This module provides a Qt dialog for validating Airtable API settings and
+integrates with the AYON tray menu to display Airtable connection status.
+"""
 
 import requests
 from ayon_core.addon import AYONAddon
-
+from qtpy import QtWidgets
 
 HTTP_OK = 200
 HTTP_UNAUTHORIZED = 401
@@ -48,7 +52,19 @@ class AirtableTrayDialog(QtWidgets.QDialog):
         tray_menu.addMenu(airtable_tray_menu)
 
     def validate_settings(self, api_key: str) -> bool:
-        """Validate the Airtable settings by making a real API call."""
+        """Validate the Airtable settings by making a real API call.
+
+        Args:
+            api_key (str): The Airtable API key to validate.
+
+        Returns:
+            bool: True if the Airtable API is reachable and the key is valid,
+            False otherwise.
+
+        Raises:
+            RuntimeError: If the Airtable API is unreachable or the API key is
+            invalid.
+        """
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",

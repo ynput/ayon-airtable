@@ -34,6 +34,7 @@ class WebServer:
         self.websocket_thread = WebServerThread(self,
             self.port, loop=self.loop
         )
+
     @property
     def server_is_running(self) -> bool:
         """Returns True if server is running."""
