@@ -18,7 +18,7 @@ class AirtableAttributeSettings(BaseSettingsModel):
         description="Name of the assignee in Airtable."
     )
     version: str = SettingsField(
-        default="V#", title="Version",
+        default="V", title="Version",
         description="Version number in Airtable."
     )
     status: str = SettingsField(
@@ -26,7 +26,7 @@ class AirtableAttributeSettings(BaseSettingsModel):
         description="Status of the project in Airtable."
     )
     tags: str = SettingsField(
-        default="Type", title="Tags",
+        default="Types", title="Tags",
         description="Comma-separated list of tags in Airtable."
     )
     product_name: str = SettingsField(
@@ -80,9 +80,9 @@ AIRTABLE_DEFAULT_VALUES = {
     "attribute_maps": {
         "project": "Project",
         "assignee": "Assignee",
-        "version": "V#",
+        "version": "V",
         "status": "Status",
-        "tags": "Type",
+        "tags": "Types",
         "product_name": "VFX_ID",
         "version_id": "VersionId",
     },
