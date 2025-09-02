@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python  # noqa: EXE001, RUF100
 
 """Prepares server package from addon repo to upload to server.
 
@@ -243,11 +243,11 @@ def get_client_files_mapping(addon_client_dir: str) -> set[FileMapping]:
     Example output:
         [
             (
-                "C:/addons/MyAddon/version.py",
+                "C:/addons/AirtableAddon/version.py",
                 "my_addon/version.py"
             ),
             (
-                "C:/addons/MyAddon/client/my_addon/__init__.py",
+                "C:/addons/AirtableAddon/client/my_addon/__init__.py",
                 "my_addon/__init__.py"
             )
         ]
