@@ -39,3 +39,10 @@ To run services locally (recommended only for development purposes), there are 2
 - `leecher` - Service that listens to Airtable events and stores them in the AYON database.
 - `processor` - Service that is processing Airtable events stored in the AYON database. Only one event is processed at a time.
 - `transmitter` - Service that is processing Ayon events and sync the relevant data to Airtable.
+
+## Limitation
+Currently users need to create fields which match to `ayon+settings://airtable/attribute_maps`
+
+`Project, Assignee, V#, Status, Type, VFX_ID, VersionId`
+
+As the integration codes are developed in the normal version of Airtable, it does not support synchronization of `Assignee` which is only avaliable in Enterprise version.
