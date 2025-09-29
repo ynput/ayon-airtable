@@ -217,6 +217,33 @@ def update_client_version(addon_client_dir: str, log: logging.Logger) -> None:
     Path(version_path).write_text(VERSION_PY_CONTENT, encoding="utf-8")
 
 
+def update_pyproject_version():
+    pyproject_path = os.path.join(
+        CURRENT_ROOT, "pyproject.toml"
+    )
+    if not os.path.exists(pyproject_path):
+        raise RuntimeError(
+            "Did not find 'pyproject.toml' in the root directory"
+        )
+
+    with open(pyproject_path, "r") as stream:
+        lines = stream.readlines()
+
+    line_idx = None
+    for idx, line in enumerate(lines):
+        if line.startswith("version = "):
+            line_idx = idx
+            break
+
+    if line_idx is None:
+        raise RuntimeError(
+            "Did not find 'version' in pyproject.toml"
+        )
+    lines[line_idx] = f'version = "{ADDON_VERSION}"\n'
+    with open(pyproject_path, "w") as stream:
+        stream.write("".join(lines))
+
+
 def update_docker_version(logger):
     """Update version in Dockerfile if present."""
     image_regex = re.compile(r"(?P<base>\s+image:[^:]+:)(?P<version>.+)")
@@ -555,6 +582,7 @@ def main(
     if not output_dir:
         output_dir = os.path.join(CURRENT_ROOT, "package")
 
+    update_pyproject_version()
     update_docker_version(log)
 
     has_client_code = bool(addon_client_dir)
