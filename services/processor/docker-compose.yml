@@ -2,10 +2,10 @@ name: ayon-airtable-services
 services:
   processor:
     container_name: processor
-    image: ynput/ayon-airtable-processor:0.1.0
+    image: ynput/ayon-airtable-processor:0.1.1-dev
     restart: unless-stopped
     environment:
       - "AYON_SERVER_URL=${AYON_SERVER_URL}"
       - "AYON_API_KEY=${AYON_API_KEY}"
       - "AYON_ADDON_NAME=airtable"
-      - "AYON_ADDON_VERSION=0.1.0"
+      - "AYON_ADDON_VERSION=0.1.1-dev"
