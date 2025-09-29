@@ -1,4 +1,5 @@
-#!/usr/bin/env python  # noqa: EXE001, RUF100
+#!/usr/bin/env python
+# ruff: noqa: C901, EXE001, RUF100, PLR0912, PLR0914, PLW2901
 
 """Prepares server package from addon repo to upload to server.
 
@@ -217,16 +218,22 @@ def update_client_version(addon_client_dir: str, log: logging.Logger) -> None:
     Path(version_path).write_text(VERSION_PY_CONTENT, encoding="utf-8")
 
 
-def update_pyproject_version():
+def update_pyproject_version() -> None:
+    """Update version in pyproject.toml if present.
+
+    Raises:
+        RuntimeError: If 'pyproject.toml' was not found or 'version' not found
+            in the file.
+
+    """
     pyproject_path = os.path.join(
         CURRENT_ROOT, "pyproject.toml"
     )
     if not os.path.exists(pyproject_path):
-        raise RuntimeError(
-            "Did not find 'pyproject.toml' in the root directory"
-        )
+        msg = "Did not find 'pyproject.toml' in the root directory"
+        raise RuntimeError(msg)
 
-    with open(pyproject_path, "r") as stream:
+    with Path(pyproject_path).open(encoding="utf-8") as stream:
         lines = stream.readlines()
 
     line_idx = None
@@ -236,15 +243,13 @@ def update_pyproject_version():
             break
 
     if line_idx is None:
-        raise RuntimeError(
-            "Did not find 'version' in pyproject.toml"
-        )
+        msg = "Did not find 'version' in pyproject.toml"
+        raise RuntimeError(msg)
     lines[line_idx] = f'version = "{ADDON_VERSION}"\n'
-    with open(pyproject_path, "w") as stream:
-        stream.write("".join(lines))
+    Path(pyproject_path).write_text("".join(lines), encoding="utf-8")
 
 
-def update_docker_version(logger):
+def update_docker_version(logger: logging.Logger) -> None:
     """Update version in Dockerfile if present."""
     image_regex = re.compile(r"(?P<base>\s+image:[^:]+:)(?P<version>.+)")
     env_regex = re.compile(
@@ -261,8 +266,7 @@ def update_docker_version(logger):
 
         # Pyproject.toml
         pyproject_toml = os.path.join(service_dir, "pyproject.toml")
-        with open(pyproject_toml, "r") as stream:
-            content = stream.read()
+        content = Path(pyproject_toml).read_text(encoding="utf-8")
 
         new_lines = []
         changed = None
@@ -277,20 +281,20 @@ def update_docker_version(logger):
             # Version was not found (could be a bug?)
             logger.error(
                 "Did not find 'version' in pyproject.toml"
-                f" of service '{service_name}"
+                " of service '%s", service_name
             )
         elif changed:
             # Add empty line at the end
             if new_lines[-1]:
                 new_lines.append("")
             # Store new lines if something changed
-            with open(pyproject_toml, "w") as stream:
-                stream.write("\n".join(new_lines))
+            Path(pyproject_toml).write_text(
+                "\n".join(new_lines), encoding="utf-8"
+            )
 
         # docker-dompose.yml
         dockercompose_path = os.path.join(service_dir, "docker-compose.yml")
-        with open(dockercompose_path, "r") as stream:
-            content = stream.read()
+        content = Path(dockercompose_path).read_text(encoding="utf-8")
 
         new_lines = []
         image_changed = None
@@ -304,6 +308,7 @@ def update_docker_version(logger):
                     new_line = f"{base}{ADDON_VERSION}{end}"
                     env_changed = new_line != line
                     line = new_line
+
             if image_changed is None:
                 image_r = image_regex.search(line)
                 if image_r:
@@ -317,21 +322,22 @@ def update_docker_version(logger):
         if env_changed is None:
             logger.error(
                 "Did not find 'AYON_ADDON_VERSION' env in docker-compose.yml"
-                f" of service '{service_name}"
+                " of service '%s", service_name
             )
 
         if image_changed is None:
             logger.error(
                 "Did not find 'image' in in docker-compose.yml"
-                f" of service '{service_name}"
+                " of service '%s", service_name
             )
 
         if image_changed or env_changed:
             # Add empty line at the end
             if new_lines[-1]:
                 new_lines.append("")
-            with open(dockercompose_path, "w") as stream:
-                stream.write("\n".join(new_lines))
+            Path(dockercompose_path).write_text(
+                "\n".join(new_lines), encoding="utf-8"
+            )
 
 
 def build_frontend() -> None:
