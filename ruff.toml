@@ -59,6 +59,8 @@ ignore = [
     "CPY001",  # missing-copyright-notice: missing copyright header
     "RUF067",  # non-empty-init-module: AYON addons define code in __init__
     "PLW0717", # too-many-statements-in-try-clause: service event loops
+    "RUF105",  # noqa-comments: keep `# noqa` like the other addons
+    "RUF201",  # rule-codes-in-selectors: keep codes like the other addons
 
 ]
 
