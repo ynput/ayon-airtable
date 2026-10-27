@@ -41,7 +41,6 @@ pydocstyle.convention = "google"
 select = ["ALL"]
 ignore = [
     "PTH",
-    "ANN101",  # missing-type-function-argument: for older ruff version
     "ANN204",  # missing-return-type-special-method
     "COM812",  # missing-trailing-comma
     "S603",    # subprocess-without-shell-equals-true
@@ -58,6 +57,8 @@ ignore = [
     "S404",    # suspicious-subprocess-import: subprocess module can be insecure
     "PLC0415", # import-outside-top-level: import must be on top of the file
     "CPY001",  # missing-copyright-notice: missing copyright header
+    "RUF067",  # non-empty-init-module: AYON addons define code in __init__
+    "PLW0717", # too-many-statements-in-try-clause: service event loops
 
 ]
 

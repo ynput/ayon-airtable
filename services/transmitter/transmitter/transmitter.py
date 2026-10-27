@@ -35,10 +35,6 @@ class AirtableTransmitter:
         Set up common needed attributes and handle airtable connection
         closure via signal handlers.
 
-        Args:
-            func (Callable, None): In case we want to override the default
-                function we cast to the processed events.
-
         Raises:
             TypeError: If the Airtable API Key is not found or not a dict.
             ValueError: If the Airtable API Key is not found or invalid.
