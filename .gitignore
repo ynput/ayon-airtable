@@ -165,3 +165,6 @@ Temporary Items
 # poetry and uv locks
 poetry.lock
 uv.lock
+
+# ignore mkdocs build
+site/
