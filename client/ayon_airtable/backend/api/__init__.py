@@ -29,7 +29,7 @@ class AirtablePythonWrapper:
 
     @property
     def host_name(self) -> str:
-        """Get the host name of the current machine.
+        """The host name of the current machine.
 
         Returns:
             str: The host name of the current machine.
@@ -184,10 +184,11 @@ class AirtablePythonWrapper:
             if not field:
                 continue
 
+            product_name = field.get(kwargs["product_name_field"])
+            project_name = field.get(kwargs["project_name_field"])
             if (
-                field.get(kwargs["product_name_field"]) == kwargs["product_name"]  # noqa: E501
-                and
-                field.get(kwargs["project_name_field"]) == kwargs["project_name"]  # noqa: E501
+                product_name == kwargs["product_name"]
+                and project_name == kwargs["project_name"]
             ):
                 return record["id"]
         return None
