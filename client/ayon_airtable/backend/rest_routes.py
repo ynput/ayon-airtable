@@ -1,7 +1,7 @@
 """Rest routes for Airtable backend."""
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from typing import Any, Union
 
@@ -32,7 +32,7 @@ class AirtableRestApiEndpoint(RestApiEndpoint):
             TypeError: If value is not supported.
 
         """
-        if isinstance(value, datetime.datetime):
+        if isinstance(value, dt.datetime):
             return value.isoformat()
         if isinstance(value, set):
             return list(value)

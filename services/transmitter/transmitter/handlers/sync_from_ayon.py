@@ -178,9 +178,6 @@ class AyonAirtableHub:
 
         If it does not exist, create it with the schema based on the data.
 
-        Args:
-            data (Dict): The data to be synced, used to determine the table.
-
         Returns:
             pyairtable.Table: The Airtable table object for the current base,
             or None if not found.

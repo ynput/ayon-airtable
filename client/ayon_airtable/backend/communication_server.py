@@ -37,7 +37,7 @@ class WebServer:
 
     @property
     def server_is_running(self) -> bool:
-        """Returns True if server is running."""
+        """True if server is running."""
         return self.websocket_thread.server_is_running
 
     def add_route(self, *args: Union[str, Request],
@@ -58,7 +58,7 @@ class WebServer:
                 log.debug("Stopping websocket server")
                 self.websocket_thread.is_running = False
                 self.websocket_thread.stop()
-        except Exception:  # noqa: BLE001
+        except Exception:
             log.warning(
                 "Error has happened during Killing websocket server",
                 exc_info=True
@@ -93,7 +93,7 @@ class WebServerThread(threading.Thread):
 
         try:
             self._run_webserver_loop()
-        except Exception:  # noqa: BLE001
+        except Exception:
             log.warning(
                 "Websocket Server service has failed", exc_info=True
             )

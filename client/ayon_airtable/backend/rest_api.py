@@ -22,7 +22,7 @@ class AirtableModuleRestAPI:
 
     @property
     def log(self) -> Logger:
-        """Get logger instance."""
+        """Logger instance."""
         if self._log is None:
             self._log = Logger.get_logger(self.__class__.__name__)
         return self._log
